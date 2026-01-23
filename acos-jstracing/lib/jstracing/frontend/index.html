@@ -1,0 +1,53 @@
+<div id="app">
+    <header class="header">
+      <div>
+        <h1 id="exercise-title"></h1>
+        <p id="exercise-desc"></p>
+      </div>
+      <div class="status" id="pyodide-status">Loading Pyodide...</div>
+    </header>
+
+    <div class="ide">
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Python</h2>
+          <div class="actions">
+            <button id="run-btn" class="primary">Run</button>
+            <button id="save-btn" class="secondary">Save</button>
+          </div>
+        </div>
+        <textarea id="code-editor" spellcheck="false"></textarea>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Output</h2>
+          <div class="meta" id="run-time"></div>
+        </div>
+        <pre id="output"></pre>
+      </section>
+    </div>
+
+    <section class="panel question-panel">
+      <div class="panel-header">
+        <h2>Question</h2>
+      </div>
+      <p id="exercise-question"></p>
+    </section>
+</div>
+
+<!-- 由后端注入练习数据：lib/jstracing/index.js 中用 EXERCISE_JSON 替换 -->
+<script>
+  // 这里的 {{EXERCISE_JSON}} 会在服务器端被替换为一个 JSON 字符串，
+  // 例如：{"title":"...","description":"..."}
+  // 注意：不要给它再加引号，后端已经做了 JSON.stringify。
+  window.JSTRACING_EXERCISE = {{EXERCISE_JSON}};
+  window.JSTRACING_SESSION = {{SESSION_JSON}};
+  window.JSTRACING_META = {{META_JSON}};
+</script>
+
+<!-- Pyodide (Python in the browser) -->
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+
+<!-- 前端逻辑脚本（使用 window.JSTRACING_EXERCISE） -->
+<script src="/static/jstracing/jstracing.js"></script>

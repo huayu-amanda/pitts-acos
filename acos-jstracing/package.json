@@ -1,0 +1,36 @@
+{
+  "name": "acos-jstracing",
+  "version": "1.0.0",
+  "main": "lib/index.js",
+  "description": "ACOS content type: jstracing",
+  "scripts": {
+    "sync-static": "node scripts/sync-static.js",
+    "prepare": "node scripts/sync-static.js",
+    "postinstall": "node scripts/sync-static.js",
+    "predev": "npm run sync-static",
+    "dev": "node standalone/server.js",
+    "prestart": "npm run sync-static",
+    "start": "node standalone/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "express": "^4.21.2"
+  },
+  "files": [
+    "lib/",
+    "jstracing-python/",
+    "static/",
+    "standalone/",
+    "scripts/",
+    "package.json",
+    "README.md"
+  ],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "acos": {
+    "type": "content-type"
+  },
+  "packageType": "content-type",
+  "namespace": "jstracing"
+}
