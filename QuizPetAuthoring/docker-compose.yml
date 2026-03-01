@@ -1,0 +1,32 @@
+version: '3.8'
+services:
+  mysql:
+    image: mariadb:10.5
+    container_name: quizpet-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+    volumes:
+      - mysql-data:/var/lib/mysql
+      # init-db.sql will be copied and executed manually to avoid permission issues
+    ports:
+      - "3306:3306"
+
+  tomcat:
+    build:
+      context: .              # 使用当前目录
+      dockerfile: Dockerfile  # 使用你马上要创建的 Dockerfile
+    image: tomcat:9.0-jdk8
+    container_name: quizpet-tomcat
+    restart: unless-stopped
+    depends_on:
+      - mysql
+    ports:
+      - "8080:8080"
+    # No host mount for webapps to avoid permission issues; copy WAR into container instead.
+    environment:
+      - CATALINA_OPTS=-Djava.security.egd=file:/dev/./urandom
+
+volumes:
+  mysql-data:
+

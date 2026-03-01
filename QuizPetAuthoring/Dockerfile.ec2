@@ -1,0 +1,28 @@
+# Build QuizPetAuthoring WAR inside Docker so the EC2 host doesn't need Maven.
+
+FROM maven:3.9.6-eclipse-temurin-8 AS build
+WORKDIR /build
+
+# Copy pom first to improve Docker layer caching
+COPY pom.xml ./
+RUN mvn -q -DskipTests dependency:go-offline
+
+# Copy source and build
+COPY src ./src
+RUN mvn -q -DskipTests package
+
+
+FROM tomcat:9.0-jdk8-temurin
+
+# Install python3 (used by some QuizPetAuthoring features)
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends python3 ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+
+# Copy python parser to the path expected by the app
+WORKDIR /opt/quizpet
+COPY python_src/python_parser.py /opt/quizpet/python_parser.py
+RUN chmod +x /opt/quizpet/python_parser.py
+
+# Deploy the WAR
+COPY --from=build /build/target/quizpet-1.0.0-BUILD-SNAPSHOT.war /usr/local/tomcat/webapps/quizpet.war
