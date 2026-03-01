@@ -2,7 +2,51 @@
 *.log
 *.tmp
 
+# env / secrets (never commit)
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Node
+**/node_modules/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/.npm/
+**/.cache/
+
+# Java / Maven / Gradle
+**/target/
+**/.classpath
+**/.project
+**/.settings/
+**/*.class
+**/*.jar
+**/*.war
+**/*.ear
+
+# Python
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+
 # IDE / system files
 .DS_Store
 .idea/
 .vscode/
+
+# Local debug artifacts (do not commit)
+acos-jstracing/test-output.html
+acos-jstracing/injected-code.txt
+
+# Spring Tools Suite / Eclipse artifacts
+**/.springBeans
+
+# QuizPetAuthoring local stray folder (not used by Maven build)
+QuizPetAuthoring/WEB-INF/
