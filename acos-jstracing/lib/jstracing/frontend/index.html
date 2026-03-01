@@ -1,8 +1,7 @@
 <div id="app">
     <header class="header">
-      <div>
-        <h1 id="exercise-title"></h1>
-        <p id="exercise-desc"></p>
+      <div class="header-left">
+        <h1>JSTracing</h1>
       </div>
       <div class="status" id="pyodide-status">Loading Pyodide...</div>
     </header>
@@ -12,19 +11,52 @@
         <div class="panel-header">
           <h2>Python</h2>
           <div class="actions">
-            <button id="run-btn" class="primary">Run</button>
             <button id="save-btn" class="secondary">Save</button>
           </div>
         </div>
+
+        <div class="exercise-labels">
+          <div class="exercise-label">
+            <div class="exercise-label-name">Title</div>
+            <div class="exercise-label-value" id="exercise-title"></div>
+          </div>
+          <div class="exercise-label">
+            <div class="exercise-label-name">Description</div>
+            <div class="exercise-label-value" id="exercise-desc"></div>
+          </div>
+        </div>
+
         <textarea id="code-editor" spellcheck="false"></textarea>
       </section>
 
       <section class="panel">
-        <div class="panel-header">
-          <h2>Output</h2>
-          <div class="meta" id="run-time"></div>
+        <div class="boxed-group" id="answer-group">
+          <div class="boxed-group-header">
+            <div class="boxed-title">Input your answer</div>
+            <div class="boxed-actions">
+              <button id="run-btn" class="primary">Run</button>
+            </div>
+          </div>
+
+          <div class="result-row">
+            <div class="result-right">
+              <span class="result-prefix">Result:</span>
+              <span class="result-value" id="run-result"></span>
+            </div>
+          </div>
+
+          <textarea id="answer-input" spellcheck="false" placeholder="Type your answer here..."></textarea>
         </div>
-        <pre id="output"></pre>
+
+        <div class="boxed-group" id="expect-group">
+          <div class="boxed-group-header">
+            <div class="boxed-title">Expect Result</div>
+            <div class="boxed-actions">
+              <button id="check-btn" class="secondary">Check</button>
+            </div>
+          </div>
+          <pre id="expected-output" class="expect-output"></pre>
+        </div>
       </section>
     </div>
 

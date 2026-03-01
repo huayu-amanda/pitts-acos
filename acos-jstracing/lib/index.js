@@ -3,11 +3,11 @@
 const path = require("path");
 const fs = require("fs");
 
-// 引入内容类型对象（./jstracing/index.js）
+// Import content type object (./jstracing/index.js)
 const JSTracing = require("./jstracing");
 
 /**
- * 这两行是给 acos-server/app.js 的 auto-discovery 用的：
+ * These two lines are for acos-server/app.js auto-discovery:
  *   var pkg = require('acos-jstracing');
  *   if (pkg.packageType) { ... }
  */
@@ -15,22 +15,22 @@ exports.packageType = "content-type";
 exports.namespace = "jstracing";
 
 exports.register = function (handlers, app, config) {
-  // 保存 handlers 供内容类型 handleEvent 使用
+  // Save handlers for content type handleEvent usage
   JSTracing.handlers = handlers;
-  // 1. 注册 content type：名称 "jstracing"
-  //    让它出现在首页的 Installed content types 里
+  // 1. Register content type: name "jstracing"
+  //    Make it appear in the homepage's Installed content types
   handlers.contentTypes["jstracing"] = JSTracing;
 
-  // 确保有 installedContentPackages 数组
+  // Ensure there is an installedContentPackages array
   JSTracing.installedContentPackages =
     JSTracing.installedContentPackages || [];
 
-  // 2. 读取并注册本包里的 content package：jstracing-python
-  //    目录：<包根>/jstracing-python/manifest.json
+  // 2. Read and register the content package in this package: jstracing-python
+  //    Directory: <package root>/jstracing-python/manifest.json
   const pkgDir = path.join(__dirname, "..", "jstracing-python");
   const manifestPath = path.join(pkgDir, "manifest.json");
 
-  // 如果没有 manifest.json，就直接返回（避免启动时报错）
+  // If manifest.json does not exist, return early (avoid startup errors)
   if (!fs.existsSync(manifestPath)) {
     console.warn(
       "[acos-jstracing] WARN: manifest.json not found in " + pkgDir
@@ -40,25 +40,25 @@ exports.register = function (handlers, app, config) {
 
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 
-  // 构造 ACOS 需要的 content package 对象
+  // Construct the content package object required by ACOS
   const contentPackage = {
-    // 元数据
+    // Metadata
     meta: {
       name: manifest.id, // "jstracing-python"
       title: manifest.title,
       description: manifest.description,
       type: manifest.type, // "jstracing"
       keywords: manifest.keywords || [],
-      contents: {}, // 下面会根据 manifest.files 填充
+      contents: {}, // Will be filled based on manifest.files
     },
 
-    // 自定义字段：方便 content type 知道包目录在哪
+    // Custom field: to help content type know where the package directory is
     dir: pkgDir,
   };
 
-  // 根据 manifest.files 构造 contents 列表
+  // Construct contents list based on manifest.files
   //
-  // 你的 manifest.json:
+  // Your manifest.json:
   // {
   //   "id": "jstracing-python",
   //   "title": "JSTracing Python examples",
@@ -69,7 +69,7 @@ exports.register = function (handlers, app, config) {
   //   ]
   // }
   //
-  // 我们会把它转成：
+  // We will convert it to:
   // contents: {
   //   "point_above_below": {
   //     name: "point_above_below",
@@ -79,7 +79,7 @@ exports.register = function (handlers, app, config) {
   // }
   (manifest.files || []).forEach((file) => {
     if (file.role === "exercise") {
-      // 去掉 .json 后缀，作为练习名
+      // Remove .json suffix to get exercise name
       const name = file.name.replace(/\.json$/i, "");
       contentPackage.meta.contents[name] = {
         name,
@@ -92,18 +92,18 @@ exports.register = function (handlers, app, config) {
   const id = contentPackage.meta.name;   // "jstracing-python"
   const type = contentPackage.meta.type; // "jstracing"
 
-  // 包自身的各种名字
+  // Various names for the package itself
   contentPackage.name = id;
   contentPackage.package = id;
   contentPackage.id = id;
-  contentPackage.namespace = id;             // ★ 关键：给 index.html 用
+  contentPackage.namespace = id;             // ★ Key: For use in index.html
 
-  // 内容类型相关
+  // Content type related
   contentPackage.type = type;
   contentPackage.contentType = type;
-  contentPackage.contentTypeNamespace = type; // ★ 关键：给 index.html 用
+  contentPackage.contentTypeNamespace = type; // ★ Key: For use in index.html
 
-  // 其他展示用元数据
+  // Other display metadata
   contentPackage.contents = contentPackage.meta.contents;
   contentPackage.title = contentPackage.meta.title;
   contentPackage.description = contentPackage.meta.description;
@@ -111,11 +111,11 @@ exports.register = function (handlers, app, config) {
   console.log("[acos-jstracing] DEBUG contentPackage:",
     JSON.stringify(contentPackage, null, 2));
 
-  // 3. 把 content package 挂到 handlers 上
-  //  这样它会出现在首页的 Installed content packages 里
+  // 3. Attach the content package to handlers
+  //    This makes it appear in the homepage's Installed content packages
   handlers.contentPackages[contentPackage.meta.name] = contentPackage;
 
-  // 4. 也挂到对应 content type 的 installedContentPackages 里
+  // 4. Also attach it to the corresponding content type's installedContentPackages
   JSTracing.installedContentPackages.push(contentPackage);
 
   console.log(

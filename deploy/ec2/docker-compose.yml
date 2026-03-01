@@ -1,0 +1,56 @@
+services:
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: quizpet-nginx
+    restart: unless-stopped
+    depends_on:
+      - acos-server
+      - quizpet-tomcat
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+
+  quizpet-mysql:
+    image: mariadb:10.5
+    container_name: quizpet-mysql
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../../QuizPetAuthoring/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql:ro
+    # Keep DB off the public internet; use SSH/SSM port-forward when you need access.
+    ports:
+      - "127.0.0.1:3306:3306"
+
+  quizpet-tomcat:
+    build:
+      context: ../../QuizPetAuthoring
+      dockerfile: Dockerfile.ec2
+    image: quizpet-tomcat:ec2
+    container_name: quizpet-tomcat
+    restart: unless-stopped
+    depends_on:
+      - quizpet-mysql
+    environment:
+      - CATALINA_OPTS=-Djava.security.egd=file:/dev/./urandom
+
+  acos-server:
+    build:
+      context: ../..
+      dockerfile: acos-server/Dockerfile
+    image: acos-server:local
+    container_name: acos-jstracing-server
+    restart: unless-stopped
+    depends_on:
+      - quizpet-tomcat
+    environment:
+      NODE_ENV: production
+      # Forward grades to QuizPetAuthoring through the Docker network
+      QUIZPET_BASE_URL: http://quizpet-tomcat:8080/quizpet
+      # Optional: make generated URLs point to your public IP (recommended when using nginx on port 80)
+      # SERVER_ADDRESS: http://<EC2_PUBLIC_IP>/
+
+volumes:
+  mysql-data:
