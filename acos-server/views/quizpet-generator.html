@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- BEGIN quizpet-generator page -->
+<h2>quizpet-generator</h2>
+<p>Select topic and quiz, load by Quiz ID textbox, then convert and import into jstracing-python.</p>
+<p><strong>Target:</strong> content type <code>jstracing</code>, content package <code>jstracing-python</code></p>
+
+<div class="panel panel-default">
+  <div class="panel-heading">QuizPet Question -> Convert + Import</div>
+  <div class="panel-body">
+    <div class="row">
+      <div class="col-md-3">
+        <label for="topicSelectInput">Topic</label>
+        <select id="topicSelectInput" class="form-control">
+          <option value="">No topic selected</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label for="topicIdInput">Topic ID</label>
+        <input id="topicIdInput" class="form-control" type="number" readonly />
+      </div>
+      <div class="col-md-3">
+        <label for="quizIdSelect">Quiz ID options</label>
+        <select id="quizIdSelect" class="form-control">
+          <option value="">No quiz option</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label for="quizIdInput">Quiz ID (used for Load)</label>
+        <input id="quizIdInput" type="number" class="form-control" placeholder="e.g. 2" />
+      </div>
+      <div class="col-md-2">
+        <label>&nbsp;</label>
+        <button id="loadQuizBtn" class="btn btn-primary btn-block" type="button">Load Quiz</button>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 12px;">
+      <div class="col-md-12">
+        <div id="loadStatus" class="alert alert-info" style="padding: 8px; margin-bottom: 0;">Status: Ready</div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 12px;">
+      <div class="col-md-6">
+        <label for="titleInput">Title</label>
+        <input id="titleInput" class="form-control" type="text" />
+      </div>
+      <div class="col-md-6">
+        <label for="rdfIdInput">RDF ID</label>
+        <input id="rdfIdInput" class="form-control" type="text" readonly />
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 12px;">
+      <div class="col-md-6">
+        <label for="descriptionInput">Description</label>
+        <textarea id="descriptionInput" class="form-control" rows="2"></textarea>
+      </div>
+      <div class="col-md-6">
+        <label for="questionInput">Question</label>
+        <textarea id="questionInput" class="form-control" rows="2"></textarea>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 12px;">
+      <div class="col-md-12">
+        <label for="codeInput">Python code</label>
+        <textarea id="codeInput" class="form-control" rows="18" style="font-family: Menlo, Monaco, Consolas, monospace; overflow: auto; resize: vertical;"></textarea>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 12px;">
+      <div class="col-md-4">
+        <label for="supportFilePickerInput">Or choose support .py file</label>
+        <input id="supportFilePickerInput" class="form-control" type="file" accept=".py,text/x-python,text/plain" />
+      </div>
+      <div class="col-md-8">
+        <label for="supportFileContentInput">Support file content (optional)</label>
+        <textarea id="supportFileContentInput" class="form-control" rows="6" style="font-family: Menlo, Monaco, Consolas, monospace;" placeholder="Paste stack.py content here when code uses: from stack import Stack"></textarea>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px;">
+      <div class="col-md-12">
+        <small>Selecting a file will auto-fill support file content.</small>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px;">
+      <div class="col-md-12">
+        <div id="importStatus" class="alert alert-info" style="padding: 8px; margin-bottom: 0;">No import yet</div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 12px;">
+      <div class="col-md-3">
+        <button id="importBtn" class="btn btn-success btn-block" type="button">Import to jstracing-python</button>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px;">
+      <div class="col-md-12">
+        <small>QuizPet base URL: {{ quizpetBaseUrl }}</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// BEGIN quizpet-generator client script
+(function() {
+  function byId(id) { return document.getElementById(id); }
+
+  var quizIdSelect = byId('quizIdSelect');
+  var quizIdInput = byId('quizIdInput');
+  var loadQuizBtn = byId('loadQuizBtn');
+  var loadStatus = byId('loadStatus');
+
+  var topicIdInput = byId('topicIdInput');
+  var topicSelectInput = byId('topicSelectInput');
+  var rdfIdInput = byId('rdfIdInput');
+  var titleInput = byId('titleInput');
+  var descriptionInput = byId('descriptionInput');
+  var questionInput = byId('questionInput');
+  var codeInput = byId('codeInput');
+  var supportFileContentInput = byId('supportFileContentInput');
+  var supportFilePickerInput = byId('supportFilePickerInput');
+  var selectedSupportFileName = 'stack.py';
+
+  var importBtn = byId('importBtn');
+  var importStatus = byId('importStatus');
+
+  function setStatus(el, type, text) {
+    if (!el) {
+      return;
+    }
+    var message = String(text || '');
+    if (el.id === 'loadStatus') {
+      if (type !== 'alert-danger') {
+        message = 'Status: ' + message;
+      }
+    }
+    el.className = 'alert ' + type;
+    el.textContent = message;
+  }
+
+  function clearTopicOptions() {
+    topicSelectInput.innerHTML = '';
+    var defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'No topic selected';
+    topicSelectInput.appendChild(defaultOption);
+  }
+
+  function renderTopicOptions(topics) {
+    clearTopicOptions();
+    (topics || []).forEach(function(t) {
+      var opt = document.createElement('option');
+      opt.value = t.topicId;
+      opt.setAttribute('data-key', t.key || '');
+      opt.setAttribute('data-title', t.title || '');
+      opt.textContent = (t.key || ('topic_' + t.topicId)) + ' - ' + (t.title || '');
+      topicSelectInput.appendChild(opt);
+    });
+  }
+
+  function clearQuizIdOptions() {
+    quizIdSelect.innerHTML = '';
+    var defaultOption = document.createElement('option');
+    defaultOption.value = '';
+    defaultOption.textContent = 'No quiz option';
+    quizIdSelect.appendChild(defaultOption);
+  }
+
+  function renderQuizIdOptions(quizzes) {
+    clearQuizIdOptions();
+    (quizzes || []).forEach(function(q) {
+      var opt = document.createElement('option');
+      opt.value = q.quizId;
+      opt.textContent = String(q.quizId);
+      quizIdSelect.appendChild(opt);
+    });
+  }
+
+  async function loadTopicOptions() {
+    clearTopicOptions();
+    try {
+      var resp = await fetch('/quizpet-generator/api/topics');
+      var data = await resp.json();
+      if (!resp.ok || !data.success) {
+        throw new Error(data.error || 'Failed to load topics.');
+      }
+      renderTopicOptions(data.topics);
+    } catch (err) {
+      setStatus(loadStatus, 'alert-warning', 'Topic list unavailable: ' + (err.message || err));
+    }
+  }
+
+  async function loadQuizOptionsForTopic(topicId) {
+    clearQuizIdOptions();
+    if (!topicId) {
+      return;
+    }
+
+    setStatus(loadStatus, 'alert-info', 'Loading quiz options for topic #' + topicId + ' ...');
+    try {
+      var resp = await fetch('/quizpet-generator/api/quizzes-by-topic/' + encodeURIComponent(topicId));
+      var data = await resp.json();
+      if (!resp.ok || !data.success) {
+        throw new Error(data.error || 'Failed to load quiz options.');
+      }
+
+      renderQuizIdOptions(data.quizzes);
+      if ((data.quizzes || []).length) {
+        setStatus(loadStatus, 'alert-success', 'Topic quiz options loaded.');
+      } else {
+        setStatus(loadStatus, 'alert-warning', 'No quiz options found for selected topic.');
+      }
+    } catch (err) {
+      setStatus(loadStatus, 'alert-danger', 'Topic quiz option error: ' + (err.message || err));
+    }
+  }
+
+  async function fillForm(quiz) {
+    if (!quiz) return;
+    quizIdInput.value = quiz.quizId || '';
+    topicIdInput.value = quiz.topicId || '';
+    rdfIdInput.value = quiz.rdfId || '';
+    titleInput.value = quiz.title || '';
+    descriptionInput.value = quiz.description || '';
+    questionInput.value = quiz.question || quiz.description || '';
+    codeInput.value = quiz.code || '';
+
+    if (quiz.topicId) {
+      topicSelectInput.value = String(quiz.topicId);
+      await loadQuizOptionsForTopic(String(quiz.topicId));
+      quizIdSelect.value = String(quiz.quizId || '');
+    }
+  }
+
+  topicSelectInput.addEventListener('change', async function() {
+    var selected = topicSelectInput.options[topicSelectInput.selectedIndex];
+    if (!selected || !selected.value) {
+      topicIdInput.value = '';
+      clearQuizIdOptions();
+      return;
+    }
+    topicIdInput.value = selected.value;
+    await loadQuizOptionsForTopic(selected.value);
+  });
+
+  quizIdSelect.addEventListener('change', function() {
+    if (quizIdSelect.value) {
+      quizIdInput.value = quizIdSelect.value;
+    }
+  });
+
+  supportFilePickerInput.addEventListener('change', function() {
+    var file = supportFilePickerInput.files && supportFilePickerInput.files[0];
+    if (!file) {
+      return;
+    }
+
+    selectedSupportFileName = file.name || selectedSupportFileName;
+
+    var reader = new FileReader();
+    reader.onload = function(evt) {
+      supportFileContentInput.value = String((evt && evt.target && evt.target.result) || '');
+      setStatus(importStatus, 'alert-info', 'Loaded support file: ' + (file.name || 'unnamed'));
+    };
+    reader.onerror = function() {
+      setStatus(importStatus, 'alert-danger', 'Failed to read selected support file.');
+    };
+    reader.readAsText(file);
+  });
+
+  loadQuizBtn.addEventListener('click', async function() {
+    var quizId = (quizIdInput.value || '').trim();
+    if (!quizId) {
+      setStatus(loadStatus, 'alert-warning', 'Please input Quiz ID first.');
+      return;
+    }
+
+    setStatus(loadStatus, 'alert-info', 'Loading quiz #' + quizId + ' ...');
+    try {
+      var resp = await fetch('/quizpet-generator/api/quiz/' + encodeURIComponent(quizId));
+      var data = await resp.json();
+      if (!resp.ok || !data.success) {
+        throw new Error(data.error || 'Load failed.');
+      }
+      await fillForm(data.quiz);
+      setStatus(loadStatus, 'alert-success', 'Quiz loaded. You can edit and import now.');
+    } catch (err) {
+      setStatus(loadStatus, 'alert-danger', 'Load error: ' + (err.message || err));
+    }
+  });
+
+  importBtn.addEventListener('click', async function() {
+    var body = {
+      quizId: quizIdInput.value,
+      topicId: topicIdInput.value,
+      topicKey: '',
+      topicTitle: '',
+      rdfId: rdfIdInput.value,
+      title: titleInput.value,
+      description: descriptionInput.value,
+      question: questionInput.value,
+      code: codeInput.value
+    };
+
+    var supportFileName = (selectedSupportFileName || 'stack.py').trim();
+    var supportFileContent = supportFileContentInput.value || '';
+    if (supportFileContent.trim()) {
+      if (!supportFileName) {
+        setStatus(importStatus, 'alert-warning', 'Support file content is set, but file name is empty.');
+        return;
+      }
+      body.supportFiles = [{
+        name: supportFileName,
+        content: supportFileContent
+      }];
+    }
+
+    if (topicSelectInput.selectedIndex > -1) {
+      var selected = topicSelectInput.options[topicSelectInput.selectedIndex];
+      if (selected && selected.value) {
+        body.topicId = selected.value;
+        body.topicKey = selected.getAttribute('data-key') || '';
+        body.topicTitle = selected.getAttribute('data-title') || '';
+      }
+    }
+
+    if (!(body.code || '').trim()) {
+      setStatus(importStatus, 'alert-warning', 'Code is empty. Please load or input Python code first.');
+      return;
+    }
+
+    setStatus(importStatus, 'alert-info', 'Importing...');
+    try {
+      var resp = await fetch('/quizpet-generator/api/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      var data = await resp.json();
+      if (!resp.ok || !data.success) {
+        throw new Error(data.error || 'Import failed.');
+      }
+
+      var msg = 'Imported as ' + data.result.exerciseName + '. Open: ' + data.result.htmlUrl;
+      setStatus(importStatus, 'alert-success', msg);
+    } catch (err) {
+      setStatus(importStatus, 'alert-danger', 'Import error: ' + (err.message || err));
+    }
+  });
+
+  clearQuizIdOptions();
+  loadTopicOptions();
+})();
+// END quizpet-generator client script
+</script>
+<!-- END quizpet-generator page -->
+{% endblock %}

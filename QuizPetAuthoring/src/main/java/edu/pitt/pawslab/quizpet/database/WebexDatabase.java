@@ -102,8 +102,12 @@ public class WebexDatabase extends JdbcDaoSupport {
 	}
 	
 	public Integer getTopicIdByQuiz(Integer quizId){
-		final String sql = "SELECT `rel_question_quiz`.`QuestionID` FROM `" + Setting.DBNAME + "`.`rel_question_quiz` WHERE QuizID = ?";
-		return getJdbcTemplate().queryForObject(
+		// ACOS quizpet-generator compatibility change:
+		// this endpoint still expects a single topicId, but rel_question_quiz can
+		// contain multiple rows per quiz. Select one deterministically to avoid
+		// IncorrectResultSizeDataAccessException when multiple topic relations exist.
+		final String sql = "SELECT `rel_question_quiz`.`QuestionID` FROM `" + Setting.DBNAME + "`.`rel_question_quiz` WHERE QuizID = ? ORDER BY `rel_question_quiz`.`QuestionID` ASC LIMIT 1";
+		ArrayList<Integer> topicIds = (ArrayList<Integer>) getJdbcTemplate().query(
 				sql,
 				new Object[]{quizId},
 				new RowMapper<Integer>() {
@@ -112,6 +116,10 @@ public class WebexDatabase extends JdbcDaoSupport {
 						return new Integer(rs.getInt(1));
 					}
 				});
+		// ACOS quizpet-generator expects a single topicId in response.
+		// Keep legacy behavior: return null when no relation, otherwise the first
+		// deterministic topicId selected by ORDER BY ... LIMIT 1 above.
+		return topicIds.isEmpty() ? null : topicIds.get(0);
 	}
 	
 	public Integer createQuizTopicRelation(Integer quizId, Integer topicId){

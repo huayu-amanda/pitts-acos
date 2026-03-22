@@ -70,6 +70,16 @@ cd deploy/ec2
 # Optional: make ACOS-generated URLs use your public IP (instead of localhost:3000)
 # export SERVER_ADDRESS="http://<EC2_PUBLIC_IP>/"
 
+# Optional: grade forwarding endpoints.
+# ACOS now forwards `grade` events by selected protocol (LTI/PAWS/A+/SPLICE, etc.).
+# Global fallback:
+# export GRADE_FORWARD_URL="http://quizpet-tomcat:8080/quizpet/api/acos/grade"
+# Protocol-specific override examples:
+# export GRADE_FORWARD_URL_LTI="http://quizpet-tomcat:8080/quizpet/api/acos/grade"
+# export GRADE_FORWARD_URL_PAWS="http://quizpet-tomcat:8080/quizpet/api/acos/grade"
+# export GRADE_FORWARD_URL_APLUS="http://quizpet-tomcat:8080/quizpet/api/acos/grade"
+# export GRADE_FORWARD_URL_SPLICE="http://quizpet-tomcat:8080/quizpet/api/acos/grade"
+
 docker compose up -d --build
 ```
 

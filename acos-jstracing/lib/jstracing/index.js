@@ -10,6 +10,71 @@ const fetchQuizHelper = require('./fetch_quiz');
 const getSessionFilePath = (contentPackageDir, exerciseName) =>
   path.join(contentPackageDir, `${exerciseName}.session.json`);
 
+// Deprecated: kept for rollback/debugging reference only.
+// Do not call this from content-type flow; ACOS server now owns protocol-level grade forwarding.
+const legacyDirectForwardGradeToQuizPet = (req, payload, protocolData) => {
+  const QUIZPET_BASE_URL = process.env.QUIZPET_BASE_URL || 'http://host.docker.internal:8080/quizpet';
+  const targetUrl = QUIZPET_BASE_URL.replace(/\/$/, '') + '/api/acos/grade';
+
+  const forwardPayload = {
+    timestamp: new Date().toISOString(),
+    acos: {
+      protocol: req && req.params ? req.params.protocol : null,
+      contentType: req && req.params ? req.params.contentType : null,
+      contentPackage: req && req.params ? req.params.contentPackage : null,
+      name: req && req.params ? req.params.name : null,
+      ip: (req && (req.headers && (req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For'])))
+        ? (req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For'])
+        : (req && req.ip ? req.ip : null),
+      userAgent: req && req.headers ? (req.headers['user-agent'] || null) : null,
+    },
+    grade: payload || {},
+    protocolData: protocolData || {},
+  };
+
+  const postJson = (urlStr, obj) => {
+    return new Promise((resolve, reject) => {
+      try {
+        const urlObj = new URL(urlStr);
+        const lib = urlObj.protocol === 'https:' ? https : http;
+        const body = JSON.stringify(obj);
+        const opts = {
+          hostname: urlObj.hostname,
+          port: urlObj.port || (urlObj.protocol === 'https:' ? 443 : 80),
+          path: urlObj.pathname + (urlObj.search || ''),
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json, text/plain, */*',
+            'Content-Length': Buffer.byteLength(body),
+          },
+        };
+        const r = lib.request(opts, (resp) => {
+          resp.on('data', () => {});
+          resp.on('end', () => resolve({ statusCode: resp.statusCode }));
+        });
+        r.on('error', reject);
+        r.write(body);
+        r.end();
+      } catch (e) {
+        reject(e);
+      }
+    });
+  };
+
+  return postJson(targetUrl, forwardPayload)
+    .then((r) => {
+      if (!r || !(r.statusCode >= 200 && r.statusCode < 300)) {
+        console.warn('[jstracing] WARN: legacy grade forward non-2xx', r && r.statusCode, 'target=', targetUrl);
+      } else {
+        console.info('[jstracing] INFO: legacy grade forwarded OK', 'target=', targetUrl);
+      }
+    })
+    .catch((e) => {
+      console.warn('[jstracing] WARN: legacy grade forward failed', 'target=', targetUrl, e && e.message ? e.message : e);
+    });
+};
+
 /**
  * JSTracing content type object
  * Registered to handlers.contentTypes['jstracing'] by acos-jstracing/lib/index.js
@@ -273,73 +338,11 @@ const JSTracing = {
           responseObj.content.saved = true;
         }
       } else if (event === 'grade') {
-        // Forward grade event to QuizPetAuthoring backend.
-        // Auth is intentionally omitted per current requirements.
-        const QUIZPET_BASE_URL = process.env.QUIZPET_BASE_URL || 'http://host.docker.internal:8080/quizpet';
-        const targetUrl = QUIZPET_BASE_URL.replace(/\/$/, '') + '/api/acos/grade';
-
-        const forwardPayload = {
-          timestamp: new Date().toISOString(),
-          acos: {
-            protocol: req && req.params ? req.params.protocol : null,
-            contentType: req && req.params ? req.params.contentType : null,
-            contentPackage: req && req.params ? req.params.contentPackage : null,
-            name: req && req.params ? req.params.name : null,
-            ip: (req && (req.headers && (req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For'])))
-              ? (req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For'])
-              : (req && req.ip ? req.ip : null),
-            userAgent: req && req.headers ? (req.headers['user-agent'] || null) : null,
-          },
-          grade: payload || {},
-          protocolData: protocolData || {},
-        };
-
-        const postJson = (urlStr, obj) => {
-          return new Promise((resolve, reject) => {
-            try {
-              const urlObj = new URL(urlStr);
-              const lib = urlObj.protocol === 'https:' ? https : http;
-              const body = JSON.stringify(obj);
-              const opts = {
-                hostname: urlObj.hostname,
-                port: urlObj.port || (urlObj.protocol === 'https:' ? 443 : 80),
-                path: urlObj.pathname + (urlObj.search || ''),
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json, text/plain, */*',
-                  'Content-Length': Buffer.byteLength(body),
-                },
-              };
-              const r = lib.request(opts, (resp) => {
-                // Drain body (best-effort) so the socket can be reused.
-                resp.on('data', () => {});
-                resp.on('end', () => resolve({ statusCode: resp.statusCode }));
-              });
-              r.on('error', reject);
-              r.write(body);
-              r.end();
-            } catch (e) {
-              reject(e);
-            }
-          });
-        };
-
-        // Fire-and-forget: do not block the /event response.
-        postJson(targetUrl, forwardPayload)
-          .then((r) => {
-            if (!r || !(r.statusCode >= 200 && r.statusCode < 300)) {
-              console.warn('[jstracing] WARN: grade forward non-2xx', r && r.statusCode, 'target=', targetUrl);
-            } else {
-              console.info('[jstracing] INFO: grade forwarded OK', 'target=', targetUrl);
-            }
-          })
-          .catch((e) => {
-            console.warn('[jstracing] WARN: grade forward failed', 'target=', targetUrl, e && e.message ? e.message : e);
-          });
-
+        // Grade forwarding now belongs to ACOS server's protocol-level dispatcher.
+        // Keep old behavior available for debugging only, but do not call by default:
+        // legacyDirectForwardGradeToQuizPet(req, payload, protocolData);
         responseObj.content = responseObj.content || {};
-        responseObj.content.gradeForwarded = true;
+        responseObj.content.gradeReported = true;
       }
     } catch (err) {
       console.error("[jstracing] ERROR in handleEvent:", err);
