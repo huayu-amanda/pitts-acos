@@ -4,7 +4,8 @@ This document explains how to deploy and run `quizpet-acos-python-tracing` local
 
 The process follows three key steps:
 1. Start core services with Docker Compose:
-	`cd deploy/ec2 && docker compose up -d --build --remove-orphans`
+	`cd deploy/ec2`
+    `docker compose up -d --build --remove-orphans`
 2. Initialize databases and tables using `QuizPetAuthoring/init-db.sql`.
 3. Import seed SQL files under `QuizPetAuthoring/src/main/resources/db`.
 
@@ -78,24 +79,18 @@ Run from repository root:
 ```bash 
 # quizpet-mysql database :
 # user/password: root/rootpassword
-cd /absolute/path/to/quizpet-acos-python-tracing
+
+cd /quizpet-acos-python-tracing
 docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/init-db.sql
 ```
 
-Alternative (from anywhere):
-
-```bash
-cd /absolute/path/to/quizpet-acos-python-tracing
-# or: cd "$(git rev-parse --show-toplevel)"
-docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/init-db.sql
-```
 
 ### 4.2 Import Seed SQL Files from resources/db
 
 Import in the following order (recommended):
 
 ```bash
-cd /absolute/path/to/quizpet-acos-python-tracing
+cd /quizpet-acos-python-tracing
 
 docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/insert-sample-ent_jquestion-topics.sql
 docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/insert-sample-ent_jquizes.sql

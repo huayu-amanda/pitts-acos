@@ -42,7 +42,7 @@ services:
       context: ../..
       dockerfile: acos-server/Dockerfile
     image: acos-server:local
-    container_name: acos-jstracing-server
+    container_name: acos-server
     restart: unless-stopped
     depends_on:
       - quizpet-tomcat
