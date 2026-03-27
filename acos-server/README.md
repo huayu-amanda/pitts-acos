@@ -31,8 +31,6 @@ with npm. E.g.:
   ```
 # For JSVEE content type
 npm install github:acos-server/acos-jsvee
-# For JSVEE Python content
-npm install github:acos-server/acos-jsvee-python
 
 # When using npm3 you can also install the dependencies of a content package
 # straightaway, e.g. this would also install acos-jsparsons correctly:
@@ -112,8 +110,6 @@ Please see [doc/development.md](doc/development.md).
   js-parsons code construction problems
 
 ### Acos Content Packages:
-  * [acos-jsvee-python](https://github.com/acos-server/acos-jsvee-python) Python
-  code visualization content
   * [acos-jsvee-java](https://github.com/acos-server/acos-jsvee-java) Java code
   visualization content
   * [acos-jsparsons-python](https://github.com/acos-server/acos-jsparsons-python)

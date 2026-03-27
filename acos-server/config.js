@@ -19,6 +19,13 @@ var CONFIG = {
     // This is used, for example, by acos-python-parser
     pythonPath: '/usr/bin/python3',
 
+    // LTI protocol keys used by acos-lti.
+    // Configure via environment variables for container/local flexibility.
+    ltiKeys: {
+        consumerKey: process.env.LTI_CONSUMER_KEY || 'acos',
+        consumerSecret: process.env.LTI_CONSUMER_SECRET || 'acos'
+    },
+
 
     // If this is enabled, all installed packages are automatically
     // searched when the server starts. In order to be auto-discovered,

@@ -20,6 +20,7 @@
     "acos-annotated": "^0.2.0",
     "acos-annotated-demo": "~0.1.0",
     "acos-html": "^0.2.0",
+    "acos-jsparsons": "file:../acos-jsparsons",
     "acos-logging-keygenerator": "~0.1.0",
     "archiver": "^2.0.0",
     "body-parser": "^1.17.2",

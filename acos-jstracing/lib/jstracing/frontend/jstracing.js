@@ -100,11 +100,14 @@
 
   const normalizeAnswer = (value) => {
     if (value === null || value === undefined) return "";
-    const s = String(value).replace(/\r\n/g, "\n");
-    // trim overall and also remove trailing spaces per line
+    const s = String(value)
+      .replace(/\r\n/g, "\n")
+      .replace(/\u00A0/g, " ")
+      .replace(/[\u2000-\u200A\u202F\u205F\u3000]/g, " ");
+    // Normalize line-by-line so harmless whitespace differences do not cause false negatives.
     return s
       .split("\n")
-      .map((line) => line.replace(/\s+$/g, ""))
+      .map((line) => line.replace(/[ \t]+/g, " ").trim())
       .join("\n")
       .trim();
   };
@@ -123,10 +126,62 @@
 
   let lastExpectedResult = session.expectedResult || session.result || "";
 
+  const getSupportFiles = () => {
+    if (!Array.isArray(data.supportFiles)) {
+      return [];
+    }
+    return data.supportFiles
+      .map((item) => {
+        const name = String((item && item.name) || "").trim();
+        const content = String((item && item.content) || "");
+        if (!name || !content.trim()) {
+          return null;
+        }
+        if (name.includes("..") || name.startsWith("/") || name.startsWith("\\")) {
+          return null;
+        }
+        return { name, content };
+      })
+      .filter(Boolean);
+  };
+
+  const ensurePyodideDir = (absPath) => {
+    const normalized = String(absPath || "/").replace(/\\/g, "/");
+    const parts = normalized.split("/").filter(Boolean);
+    let current = "";
+    for (const part of parts) {
+      current += `/${part}`;
+      try {
+        pyodide.FS.stat(current);
+      } catch (_e) {
+        pyodide.FS.mkdir(current);
+      }
+    }
+  };
+
+  const loadSupportFilesIntoPyodide = async () => {
+    const files = getSupportFiles();
+    if (!files.length) {
+      return;
+    }
+
+    for (const file of files) {
+      const fsPath = `/${file.name}`.replace(/\/+/g, "/");
+      const lastSlash = fsPath.lastIndexOf("/");
+      const dirPath = lastSlash > 0 ? fsPath.slice(0, lastSlash) : "/";
+      ensurePyodideDir(dirPath);
+      pyodide.FS.writeFile(fsPath, file.content, { encoding: "utf8" });
+    }
+
+    await pyodide.runPythonAsync("import sys\nif '/' not in sys.path:\n    sys.path.insert(0, '/')");
+  };
+
   const computeExpectedResult = async (code) => {
     if (!pyodideReady) {
       await initPyodide();
     }
+
+    await loadSupportFilesIntoPyodide();
 
     const stdout = [];
     const stderr = [];
@@ -226,11 +281,15 @@
     saveBtn.disabled = true;
     setStatus("Checking...", "running");
     try {
-      if (!lastExpectedResult) {
-        const { expectedResult } = await computeExpectedResult(code);
-        lastExpectedResult = expectedResult;
-      }
+      const { expectedResult } = await computeExpectedResult(code);
+      lastExpectedResult = expectedResult;
       expectedEl.textContent = lastExpectedResult;
+
+      const studentAnswer = answerEl.value || "";
+      const isCorrect = normalizeAnswer(studentAnswer) === normalizeAnswer(lastExpectedResult);
+      resultEl.textContent = isCorrect ? "Success" : "Wrong";
+      resultEl.className = "result-value" + (isCorrect ? " success" : " wrong");
+
       await saveSession(code, lastExpectedResult);
       setStatus("Expected result shown", "ready");
     } catch (err) {

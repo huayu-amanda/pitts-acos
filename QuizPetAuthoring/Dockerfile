@@ -1,6 +1,6 @@
 FROM quizpet-tomcat-python:9.0-jdk8
 
-# 把项目里的 python_parser.py 拷到 Java 期望的路径
+# Copy python_parser.py to the path expected by the Java application
 COPY python_src/python_parser.py /opt/quizpet/python_parser.py
 RUN chmod +x /opt/quizpet/python_parser.py
 

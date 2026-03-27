@@ -1,0 +1,1 @@
+{"exerciseName":"quiz_3","quizId":3,"topicId":3,"topicKey":"q_py_topic_loop","topicTitle":"Loop","rdfId":"q_py_loop_sum","title":"Quiz 3","description":"Loop practice. Write the final printed value.","question":"What is the output?","code":"# loop_sum.py\nstart = 1\nend = 6\nstep = 1\ntotal = 0\n\nfor i in range(start, end, step):\n    total += i\n\nprint(total)\n"}

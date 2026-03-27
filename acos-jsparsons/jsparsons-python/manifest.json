@@ -1,0 +1,13 @@
+{
+  "id": "jsparsons-python",
+  "title": "JSParsons Python examples",
+  "description": "Parsons-style Python exercises.",
+  "type": "jsparsons",
+  "keywords": ["python", "parsons"],
+  "files": [
+    {
+      "name": "ps_python_addition.json",
+      "role": "exercise"
+    }
+  ]
+}

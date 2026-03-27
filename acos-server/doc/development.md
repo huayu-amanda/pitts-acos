@@ -20,9 +20,9 @@ Activities are launched by using URLs that contain four different parts:
 * Content package
 * Content name
 
-For example: `/lti/jsvee/jsvee-python/hello_world` In this case, the
-protocol is `lti`, content type is `jsvee`, content package is
-`jsvee-python` and the actual activity inside the package is `hello_world`.
+For example: `/lti/jsparsons/jsparsons-python/hello_world` In this case, the
+protocol is `lti`, content type is `jsparsons`, content package is
+`jsparsons-python` and the actual activity inside the package is `hello_world`.
 
 When an activity is launched, the request will go through these different
 parts that will initialize them and produce the required HTML markup.

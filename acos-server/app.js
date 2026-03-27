@@ -18,7 +18,10 @@ var nunjucks = require('nunjucks');
 var archiver = require('archiver');
 var crypto = require('crypto');
 var _ = require('lodash');
+var http = require('http');
+var https = require('https');
 var config = require('./config');
+var registerQuizpetGeneratorRoutes = require('./routes/quizpet-generator');
 
 
 const publicDirectory = path.join(__dirname, 'public');
@@ -95,6 +98,196 @@ fs.mkdir(config.publicLogDirectory, 0775, function(err) {});
 
 // Register all installed packages
 var handlers = { 'protocols': {}, 'contentTypes': {}, 'contentPackages': {}, 'tools': {}, 'loggers': {}, 'libraries': {} };
+
+// Grade events are emitted by content and forwarded by ACOS using the active protocol.
+var normalizeProtocolKey = function(protocolName) {
+  var raw = String(protocolName || '').trim();
+  if (!raw) {
+    return '';
+  }
+
+  var upper = raw.toUpperCase();
+  return upper.replace(/[^A-Z0-9]/g, '_');
+};
+
+var isPreferredForwardProtocol = function(protocolKey) {
+  return ['SPLICE', 'LTI', 'PITT'].indexOf(protocolKey) > -1;
+};
+
+var resolveGradeForwardUrl = function(protocolName) {
+  var protocolKey = normalizeProtocolKey(protocolName);
+  var protocolSpecific = protocolKey ? process.env['GRADE_FORWARD_URL_' + protocolKey] : null;
+  var genericByName = protocolKey ? process.env['GRADE_FORWARD_URL_PROTOCOL_' + protocolKey] : null;
+  var generic = process.env.GRADE_FORWARD_URL;
+
+  var target = protocolSpecific || genericByName || generic;
+  if (!target && process.env.QUIZPET_BASE_URL) {
+    target = process.env.QUIZPET_BASE_URL.replace(/\/$/, '') + '/api/acos/grade';
+  }
+
+  if (!target) {
+    return null;
+  }
+
+  if (protocolKey) {
+    target = target.replace(/\{protocol\}/gi, protocolKey.toLowerCase());
+  }
+
+  return target;
+};
+
+var postJson = function(urlStr, obj) {
+  return new Promise(function(resolve, reject) {
+    try {
+      var urlObj = new URL(urlStr);
+      var lib = urlObj.protocol === 'https:' ? https : http;
+      var body = JSON.stringify(obj);
+      var opts = {
+        hostname: urlObj.hostname,
+        port: urlObj.port || (urlObj.protocol === 'https:' ? 443 : 80),
+        path: urlObj.pathname + (urlObj.search || ''),
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json, text/plain, */*',
+          'Content-Length': Buffer.byteLength(body)
+        }
+      };
+      var r = lib.request(opts, function(resp) {
+        resp.on('data', function() {});
+        resp.on('end', function() { resolve({ statusCode: resp.statusCode }); });
+      });
+      r.on('error', reject);
+      r.write(body);
+      r.end();
+    } catch (e) {
+      reject(e);
+    }
+  });
+};
+
+var dispatchGradeToHost = function(event, payload, req, protocolData) {
+  if (event !== 'grade') {
+    return;
+  }
+
+  var protocolName = req && req.params ? req.params.protocol : '';
+  var protocolKey = normalizeProtocolKey(protocolName);
+
+  if (protocolKey === 'A' || protocolKey === 'A_PLUS' || protocolKey === 'APLUS') {
+    console.log('[ACOS Server] ' + 'INFO:'.green + ' Grade forwarding skipped for A+ protocol by policy.');
+    return;
+  }
+
+  if (!isPreferredForwardProtocol(protocolKey)) {
+    console.log('[ACOS Server] ' + 'INFO:'.green + ' Grade forwarding skipped for non-preferred protocol: %s', protocolName);
+    return;
+  }
+
+  var targetUrl = resolveGradeForwardUrl(protocolName);
+  if (!targetUrl) {
+    console.log('[ACOS Server] ' + 'INFO:'.green + ' Grade forwarding skipped (no endpoint configured).');
+    return;
+  }
+
+  var forwardPayload = {
+    timestamp: new Date().toISOString(),
+    acos: {
+      protocol: protocolName || null,
+      contentType: req && req.params ? req.params.contentType : null,
+      contentPackage: req && req.params ? req.params.contentPackage : null,
+      name: req && req.params ? req.params.name : null,
+      ip: (req && req.headers && (req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For']))
+        ? (req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For'])
+        : (req && req.ip ? req.ip : null),
+      userAgent: req && req.headers ? (req.headers['user-agent'] || null) : null
+    },
+    grade: payload || {},
+    protocolData: protocolData || {}
+  };
+
+  postJson(targetUrl, forwardPayload)
+    .then(function(r) {
+      if (!r || !(r.statusCode >= 200 && r.statusCode < 300)) {
+        console.log('[ACOS Server] ' + 'WARN:'.yellow + ' Grade forward non-2xx => protocol: %s, status: %s, target: %s',
+          protocolName, r && r.statusCode, targetUrl);
+      } else {
+        console.log('[ACOS Server] ' + 'INFO:'.green + ' Grade forwarded => protocol: %s, target: %s',
+          protocolName, targetUrl);
+      }
+    })
+    .catch(function(e) {
+      console.log('[ACOS Server] ' + 'WARN:'.yellow + ' Grade forward failed => protocol: %s, target: %s, error: %s',
+        protocolName, targetUrl, e && e.message ? e.message : e);
+    });
+};
+
+// Additive extension: log forwarding is implemented separately to avoid changing
+// existing grade forwarding behavior.
+var resolveLogForwardUrl = function(protocolName) {
+  var protocolKey = normalizeProtocolKey(protocolName);
+  var protocolSpecific = protocolKey ? process.env['LOG_FORWARD_URL_' + protocolKey] : null;
+  var genericByName = protocolKey ? process.env['LOG_FORWARD_URL_PROTOCOL_' + protocolKey] : null;
+  var generic = process.env.LOG_FORWARD_URL;
+
+  var target = protocolSpecific || genericByName || generic;
+  if (!target) {
+    return null;
+  }
+
+  if (protocolKey) {
+    target = target.replace(/\{protocol\}/gi, protocolKey.toLowerCase());
+  }
+
+  return target;
+};
+
+// Additive extension: only handles `event === 'log'` and leaves all existing
+// event handling flow intact.
+var dispatchLogToHost = function(event, payload, req, protocolData) {
+  if (event !== 'log') {
+    return;
+  }
+
+  var protocolName = req && req.params ? req.params.protocol : '';
+  var targetUrl = resolveLogForwardUrl(protocolName);
+
+  if (!targetUrl) {
+    return;
+  }
+
+  var forwardPayload = {
+    timestamp: new Date().toISOString(),
+    acos: {
+      protocol: protocolName || null,
+      contentType: req && req.params ? req.params.contentType : null,
+      contentPackage: req && req.params ? req.params.contentPackage : null,
+      name: req && req.params ? req.params.name : null,
+      ip: (req && req.headers && (req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For']))
+        ? (req.headers['x-forwarded-for'] || req.headers['X-Forwarded-For'])
+        : (req && req.ip ? req.ip : null),
+      userAgent: req && req.headers ? (req.headers['user-agent'] || null) : null
+    },
+    event: event,
+    payload: payload || {},
+    protocolData: protocolData || {}
+  };
+
+  postJson(targetUrl, forwardPayload)
+    .then(function(r) {
+      if (!r || !(r.statusCode >= 200 && r.statusCode < 300)) {
+        console.log('[ACOS Server] ' + 'WARN:'.yellow + ' Log forward non-2xx => protocol: %s, status: %s, target: %s',
+          protocolName, r && r.statusCode, targetUrl);
+      } else {
+        console.log('[ACOS Server] ' + 'INFO:'.green + ' Log forwarded => protocol: %s, target: %s',
+          protocolName, targetUrl);
+      }
+    })
+    .catch(function(e) {
+      console.log('[ACOS Server] ' + 'WARN:'.yellow + ' Log forward failed => protocol: %s, target: %s, error: %s',
+        protocolName, targetUrl, e && e.message ? e.message : e);
+    });
+};
 
 var initPackage = function(name, package) {
   try {
@@ -189,6 +382,9 @@ Object.keys(handlers.contentTypes).forEach(function(contentType) {
 // Prioritize API URLs
 var api = express.Router();
 app.use('/api/v1', api);
+
+// quizpet-generator routes are encapsulated in a dedicated module.
+registerQuizpetGeneratorRoutes(app, handlers);
 // ********************************************************************************
 
 
@@ -198,7 +394,15 @@ app.use('/api/v1', api);
 
 // URLs are, for example, http://myserver.com/html/puzzles/advanced/ex5
 var urlPrefix = '/:protocol([a-zA-Z0-9_-]+)/:contentType([a-zA-Z0-9_-]+)/:contentPackage([a-zA-Z0-9_-]+)/:name([a-zA-Z0-9_-]+)';
-app.all(urlPrefix, function(req, res) {
+app.all(urlPrefix, function(req, res, next) {
+
+  // This generic 4-segment matcher can also match tool paths like
+  // /quizpet-generator/api/quiz/:id as protocol=quizpet-generator, ...
+  // If that happens, ACOS content handling returns "Unsupported request!".
+  // Skip here and pass control to the dedicated quizpet-generator routes below.
+  if (req.params.protocol === 'quizpet-generator') {
+    return next();
+  }
 
   if (handlers.protocols[req.params.protocol] && handlers.contentTypes[req.params.contentType] && handlers.contentPackages[req.params.contentPackage]) {
 
@@ -278,6 +482,10 @@ app.post(urlPrefix + '/event', function(req, res) {
     var payload = JSON.parse(req.body.payload);
     var protocolData = JSON.parse(req.body.protocolData);
 
+    dispatchGradeToHost(event, payload, req, protocolData);
+    // Additive call: grade flow is unchanged; log forwarding is optional by env.
+    dispatchLogToHost(event, payload, req, protocolData);
+
     // Sync additional handlers
     for (var logger in handlers.loggers) {
       handlers.loggers[logger].handleEvent(event, payload, req, res, protocolData);
@@ -332,9 +540,7 @@ app.post(urlPrefix + '/event', function(req, res) {
 
 });
 
-
-
-
+// ********************************************************************************
 
 // ********************************************************************************
 // Front page
@@ -357,6 +563,12 @@ app.get('/', function(req, res) {
   for (var tool in handlers.tools) {
     params.tools.push(tool);
   }
+
+  // BEGIN quizpet-generator tools link fallback
+  if (params.tools.indexOf('quizpet-generator') === -1) {
+    params.tools.push('quizpet-generator');
+  }
+  // END quizpet-generator tools link fallback
 
   res.render('index.html', params);
 

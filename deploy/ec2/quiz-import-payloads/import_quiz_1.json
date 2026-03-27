@@ -1,0 +1,1 @@
+{"exerciseName":"quiz_1","quizId":1,"topicId":1,"topicKey":"q_py_topic_expression_basics","topicTitle":"Expression Basics","rdfId":"q_py_sample","title":"Quiz 1","description":"Expression basics practice. Write exactly what this program prints.","question":"What is the output?","code":"# tester.py\ndef compute(a, b):\n    return 5 * 3 + 4\n\nprint(compute(5, 3))\n"}
