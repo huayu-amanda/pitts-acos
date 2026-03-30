@@ -52,8 +52,20 @@ services:
       NODE_ENV: production
       LTI_CONSUMER_KEY: ${LTI_CONSUMER_KEY:-acos}
       LTI_CONSUMER_SECRET: ${LTI_CONSUMER_SECRET:-acos}
-      # Forward grades to QuizPetAuthoring through the Docker network
-      QUIZPET_BASE_URL: http://quizpet-tomcat:8080/quizpet
+      # Runtime-selectable QuizPet endpoint and credentials.
+      # Use: docker compose --env-file ./env/local.env ... or ./env/pitts.env
+      QUIZPET_BASE_URL: ${QUIZPET_BASE_URL:-http://quizpet-tomcat:8080/quizpet}
+      QUIZPET_USERNAME: ${QUIZPET_USERNAME:-}
+      QUIZPET_PASSWORD: ${QUIZPET_PASSWORD:-}
+      # Dual-source generator configs (both pages can coexist):
+      # /quizpet-generator       -> *_LOCAL
+      # /quizpet-generator-pitts -> *_PITTS
+      QUIZPET_BASE_URL_LOCAL: ${QUIZPET_BASE_URL_LOCAL:-http://quizpet-tomcat:8080/quizpet}
+      QUIZPET_USERNAME_LOCAL: ${QUIZPET_USERNAME_LOCAL:-}
+      QUIZPET_PASSWORD_LOCAL: ${QUIZPET_PASSWORD_LOCAL:-}
+      QUIZPET_BASE_URL_PITTS: ${QUIZPET_BASE_URL_PITTS:-https://adapt2.sis.pitt.edu/quizpet_authoring}
+      QUIZPET_USERNAME_PITTS: ${QUIZPET_USERNAME_PITTS:-}
+      QUIZPET_PASSWORD_PITTS: ${QUIZPET_PASSWORD_PITTS:-}
       # Optional: make generated URLs point to your public IP (recommended when using nginx on port 80)
       # SERVER_ADDRESS: http://<EC2_PUBLIC_IP>/
 

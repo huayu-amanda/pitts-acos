@@ -19,6 +19,7 @@
   "files": [
     "lib/",
     "jstracing-python/",
+    "jstracing-java/",
     "static/",
     "standalone/",
     "scripts/",

@@ -2,70 +2,39 @@
     <header class="header">
       <div class="header-left">
         <h1>JSTracing</h1>
+        <div class="status" id="pyodide-status">Loading runtime...</div>
       </div>
-      <div class="status" id="pyodide-status">Loading Pyodide...</div>
     </header>
 
     <div class="ide">
       <section class="panel">
-        <div class="panel-header">
-          <h2>Python</h2>
-          <div class="actions">
-            <button id="save-btn" class="secondary">Save</button>
-          </div>
+        <div class="exercise-description" id="exercise-desc">
         </div>
 
-        <div class="exercise-labels">
-          <div class="exercise-label">
-            <div class="exercise-label-name">Title</div>
-            <div class="exercise-label-value" id="exercise-title"></div>
-          </div>
-          <div class="exercise-label">
-            <div class="exercise-label-name">Description</div>
-            <div class="exercise-label-value" id="exercise-desc"></div>
-          </div>
-        </div>
+        <div id="code-tabs" class="code-tabs" aria-label="Code files"></div>
+        <div class="code-tab-content">
+          <textarea id="code-editor" spellcheck="false"></textarea>
 
-        <textarea id="code-editor" spellcheck="false"></textarea>
-      </section>
+          <div id="answer-group">
+            <div class="answer-title">What is your the output ?</div>
 
-      <section class="panel">
-        <div class="boxed-group" id="answer-group">
-          <div class="boxed-group-header">
-            <div class="boxed-title">Input your answer</div>
-            <div class="boxed-actions">
-              <button id="run-btn" class="primary">Run</button>
+            <div class="answer-note">
+              Be careful of whitespace(space, newline) in your answer.
             </div>
-          </div>
 
-          <div class="result-row">
-            <div class="result-right">
+            <div class="answer-submit-row">
+              <textarea id="answer-input" spellcheck="false" placeholder="Type your answer here..."></textarea>
+              <button id="run-btn" class="primary">Submit</button>
+            </div>
+
+            <div class="result-row-inline">
               <span class="result-prefix">Result:</span>
               <span class="result-value" id="run-result"></span>
             </div>
           </div>
-
-          <textarea id="answer-input" spellcheck="false" placeholder="Type your answer here..."></textarea>
-        </div>
-
-        <div class="boxed-group" id="expect-group">
-          <div class="boxed-group-header">
-            <div class="boxed-title">Expect Result</div>
-            <div class="boxed-actions">
-              <button id="check-btn" class="secondary">Check</button>
-            </div>
-          </div>
-          <pre id="expected-output" class="expect-output"></pre>
         </div>
       </section>
     </div>
-
-    <section class="panel question-panel">
-      <div class="panel-header">
-        <h2>Question</h2>
-      </div>
-      <p id="exercise-question"></p>
-    </section>
 </div>
 
 <!-- 由后端注入练习数据：lib/jstracing/index.js 中用 EXERCISE_JSON 替换 -->

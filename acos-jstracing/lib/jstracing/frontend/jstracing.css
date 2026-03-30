@@ -13,14 +13,20 @@ body {
 
 .header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
+  align-items: center;
+  justify-content: flex-start;
   gap: 16px;
   margin-bottom: 16px;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .header h1 {
-  margin: 0 0 6px 0;
+  margin: 0;
   font-size: 24px;
 }
 
@@ -31,16 +37,16 @@ body {
 
 .ide {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 16px;
 }
 
 .panel {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.05);
-  padding: 12px 14px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
 .panel-header {
@@ -94,43 +100,57 @@ button:disabled {
   width: 100%;
   min-height: 360px;
   resize: vertical;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border: none;
+  border-radius: 0;
   padding: 12px;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 14px;
   line-height: 1.5;
-  background: #f8fafc;
+  background: transparent;
 }
 
-.exercise-labels {
-  display: grid;
-  gap: 8px;
-  margin-bottom: 10px;
-  padding: 10px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+#code-editor[readonly] {
+  cursor: default;
+}
+
+.code-tab-content {
+  border: 2px solid #2563eb;
+  border-radius: 0 0 8px 8px;
+  background: transparent;
+  padding: 0;
+}
+
+.code-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+  overflow-x: auto;
+}
+
+.code-tab {
+  border: 1px solid #cbd5e1;
   background: #ffffff;
-}
-
-.exercise-label {
-  display: grid;
-  grid-template-columns: 90px 1fr;
-  gap: 10px;
-  align-items: start;
-}
-
-.exercise-label-name {
-  font-size: 12px;
-  font-weight: 700;
-  color: #475569;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.exercise-label-value {
+  color: #334155;
+  border-radius: 8px 8px 0 0;
+  padding: 6px 12px;
   font-size: 14px;
-  color: #0f172a;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.code-tab.active {
+  border-color: #2563eb;
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.exercise-description {
+  margin: 0 0 10px 0;
+  padding: 0 2px;
+  font-size: 14px;
+  color: #334155;
   word-break: break-word;
 }
 
@@ -177,6 +197,39 @@ button:disabled {
   gap: 8px;
 }
 
+.answer-title {
+  font-size: 16px;
+  font-weight: 400;
+  color: #4f46e5;
+  margin-bottom: 4px;
+}
+
+.answer-note {
+  font-size: 13px;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.answer-submit-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+.result-row-inline {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+}
+
 .result-row {
   display: flex;
   align-items: center;
@@ -192,13 +245,13 @@ button:disabled {
 
 .result-prefix {
   font-size: 13px;
-  font-weight: 800;
-  color: #475569;
+  font-weight: 400;
+  color: #374151;
 }
 
 .result-value {
-  font-weight: 800;
-  color: #334155;
+  font-weight: 400;
+  color: #374151;
   text-align: right;
   min-height: 1.2em;
   font-size: 13px;
@@ -213,16 +266,35 @@ button:disabled {
 }
 
 #answer-input {
-  width: 100%;
+  flex: 0 0 70%;
+  width: 70%;
+  max-width: 70%;
   min-height: 120px;
   resize: vertical;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #374151;
   border-radius: 8px;
   padding: 10px 12px;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
   font-size: 14px;
   line-height: 1.5;
   background: #f8fafc;
+}
+
+.submit-row-box {
+  margin-top: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+#answer-group {
+  padding: 12px;
+  border: none;
 }
 
 #expected-output {
@@ -276,5 +348,20 @@ button:disabled {
 @media (max-width: 900px) {
   .ide {
     grid-template-columns: 1fr;
+  }
+
+  .answer-submit-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #answer-input {
+    flex: 1 1 auto;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .answer-submit-row #run-btn {
+    align-self: flex-end;
   }
 }

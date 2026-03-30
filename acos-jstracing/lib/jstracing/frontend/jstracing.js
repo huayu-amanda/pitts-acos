@@ -6,32 +6,226 @@
   const titleEl = document.getElementById("exercise-title");
   const descEl = document.getElementById("exercise-desc");
   const questionEl = document.getElementById("exercise-question");
+  const languageTitleEl = document.getElementById("code-language-title");
+  const codeTabsEl = document.getElementById("code-tabs");
   const editorEl = document.getElementById("code-editor");
   const answerEl = document.getElementById("answer-input");
   const resultEl = document.getElementById("run-result");
-  const expectedEl = document.getElementById("expected-output");
   const statusEl = document.getElementById("pyodide-status");
   const runBtn = document.getElementById("run-btn");
-  const saveBtn = document.getElementById("save-btn");
-  const checkBtn = document.getElementById("check-btn");
 
-  titleEl.textContent = data.title || "JSTracing exercise";
-  descEl.textContent = data.description || "";
-  questionEl.textContent = data.question || "What is the output?";
+  if (titleEl) {
+    titleEl.textContent = data.title || "JSTracing exercise";
+  }
+  if (descEl) {
+    descEl.textContent = data.description || "";
+  }
+  if (questionEl) {
+    questionEl.textContent = data.question || "What is the output?";
+  }
 
-  editorEl.value = session.code || data.code || "";
+  const initialCode = session.code || data.code || "";
   answerEl.value = session.answer || "";
   resultEl.textContent = session.verdict || "";
   resultEl.className = "result-value" + (session.verdict === "Success" ? " success" : session.verdict === "Wrong" ? " wrong" : "");
-  // Do not show expected result on load; only reveal after Check.
-  expectedEl.textContent = "";
+
+  const normalizeLanguage = (value) => {
+    const v = String(value || "").trim().toLowerCase();
+    return v === "java" ? "java" : "python";
+  };
+
+  const formatJavaCodeForDisplay = (code) => {
+    const src = String(code || "").replace(/\r\n/g, "\n");
+    if (!src.trim()) return src;
+
+    const out = [];
+    let inString = false;
+    let quote = "";
+    let escapeNext = false;
+    let parenDepth = 0;
+
+    for (let i = 0; i < src.length; i += 1) {
+      const ch = src[i];
+      if (inString) {
+        out.push(ch);
+        if (escapeNext) {
+          escapeNext = false;
+        } else if (ch === "\\") {
+          escapeNext = true;
+        } else if (ch === quote) {
+          inString = false;
+          quote = "";
+        }
+        continue;
+      }
+
+      if (ch === '"' || ch === "'") {
+        inString = true;
+        quote = ch;
+        out.push(ch);
+        continue;
+      }
+      if (ch === "(") {
+        parenDepth += 1;
+        out.push(ch);
+        continue;
+      }
+      if (ch === ")") {
+        if (parenDepth > 0) parenDepth -= 1;
+        out.push(ch);
+        continue;
+      }
+      if (ch === "{") {
+        out.push("{");
+        out.push("\n");
+        continue;
+      }
+      if (ch === "}") {
+        out.push("\n");
+        out.push("}");
+        out.push("\n");
+        continue;
+      }
+      if (ch === ";" && parenDepth === 0) {
+        out.push(";");
+        out.push("\n");
+        continue;
+      }
+      out.push(ch);
+    }
+
+    const lines = out
+      .join("")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    let level = 0;
+    const pretty = [];
+    for (const line of lines) {
+      if (line.startsWith("}")) {
+        level = Math.max(0, level - 1);
+      }
+      pretty.push(`${"    ".repeat(level)}${line}`);
+      if (line.endsWith("{")) {
+        level += 1;
+      }
+    }
+
+    return pretty.join("\n");
+  };
+
+  const codeLanguage = normalizeLanguage(data.language);
+  const isPythonMode = codeLanguage === "python";
+  const inferMainFileNameFromCode = (code) => {
+    const src = String(code || "").replace(/\r\n/g, "\n");
+    const lines = src.split("\n");
+    for (const rawLine of lines) {
+      const line = String(rawLine || "").trim();
+      if (!line) {
+        continue;
+      }
+      const candidate = line
+        .replace(/^#+\s*/, "")
+        .replace(/^\/\/+\s*/, "")
+        .replace(/^\/\*+\s*/, "")
+        .replace(/\*\/\s*$/, "")
+        .trim();
+      if (/^[a-zA-Z0-9_.-]+\.(py|java)$/i.test(candidate)) {
+        return candidate;
+      }
+      break;
+    }
+    return codeLanguage === "java" ? "Main.java" : "main.py";
+  };
+
+  const formatCodeForDisplay = (code, fileName) => {
+    const name = String(fileName || "").toLowerCase();
+    if (codeLanguage === "java" || name.endsWith(".java")) {
+      return formatJavaCodeForDisplay(code);
+    }
+    return String(code || "");
+  };
+
+  const normalizeSupportFiles = () => {
+    if (!Array.isArray(data.supportFiles)) {
+      return [];
+    }
+    return data.supportFiles
+      .map((item) => {
+        const name = String((item && item.name) || "").trim();
+        const content = String((item && item.content) || "");
+        if (!name || !content.trim()) {
+          return null;
+        }
+        return { name, content };
+      })
+      .filter(Boolean);
+  };
+
+  const mainFileName = String(data.mainFileName || "").trim() || inferMainFileNameFromCode(initialCode);
+  const codeTabs = [{
+    name: mainFileName,
+    content: initialCode,
+    isMain: true,
+  }].concat(
+    normalizeSupportFiles().map((file) => ({
+      name: file.name,
+      content: file.content,
+      isMain: false,
+    }))
+  );
+
+  let activeCodeTab = 0;
+  let mainCode = initialCode;
+
+  const renderCodeTab = () => {
+    const active = codeTabs[activeCodeTab] || codeTabs[0];
+    if (!active) {
+      editorEl.value = "";
+      return;
+    }
+    editorEl.value = formatCodeForDisplay(active.content, active.name);
+  };
+
+  const renderCodeTabs = () => {
+    if (!codeTabsEl) {
+      renderCodeTab();
+      return;
+    }
+    codeTabsEl.innerHTML = "";
+    codeTabs.forEach((tab, index) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "code-tab" + (index === activeCodeTab ? " active" : "");
+      btn.textContent = tab.name;
+      btn.addEventListener("click", () => {
+        activeCodeTab = index;
+        renderCodeTabs();
+        renderCodeTab();
+      });
+      codeTabsEl.appendChild(btn);
+    });
+    renderCodeTab();
+  };
+
+  editorEl.readOnly = true;
+  renderCodeTabs();
+
+  if (languageTitleEl) {
+    languageTitleEl.textContent = isPythonMode ? "Python" : "Java";
+  }
 
   let pyodide = null;
   let pyodideReady = false;
 
   const setStatus = (text, variant) => {
+    if (!statusEl) {
+      return;
+    }
     statusEl.textContent = text;
     statusEl.className = "status" + (variant ? ` ${variant}` : "");
+    statusEl.style.display = variant === "ready" ? "none" : "inline-flex";
   };
 
   const eventUrl = (() => {
@@ -113,6 +307,9 @@
   };
 
   const initPyodide = async () => {
+    if (!isPythonMode) {
+      return;
+    }
     if (pyodideReady) {
       return;
     }
@@ -126,24 +323,21 @@
 
   let lastExpectedResult = session.expectedResult || session.result || "";
 
-  const getSupportFiles = () => {
-    if (!Array.isArray(data.supportFiles)) {
-      return [];
+  const getStaticExpectedResultForJava = () => {
+    if (typeof data.expectedResult === "string" && data.expectedResult.length) {
+      return data.expectedResult;
     }
-    return data.supportFiles
-      .map((item) => {
-        const name = String((item && item.name) || "").trim();
-        const content = String((item && item.content) || "");
-        if (!name || !content.trim()) {
-          return null;
-        }
-        if (name.includes("..") || name.startsWith("/") || name.startsWith("\\")) {
-          return null;
-        }
-        return { name, content };
-      })
-      .filter(Boolean);
+    if (typeof session.expectedResult === "string" && session.expectedResult.length) {
+      return session.expectedResult;
+    }
+    if (typeof session.result === "string" && session.result.length) {
+      return session.result;
+    }
+    return null;
   };
+
+  const getSupportFiles = () => normalizeSupportFiles()
+    .filter((file) => !(file.name.includes("..") || file.name.startsWith("/") || file.name.startsWith("\\")));
 
   const ensurePyodideDir = (absPath) => {
     const normalized = String(absPath || "/").replace(/\\/g, "/");
@@ -177,6 +371,13 @@
   };
 
   const computeExpectedResult = async (code) => {
+    if (!isPythonMode) {
+      const staticExpected = getStaticExpectedResultForJava();
+      if (staticExpected === null) {
+        throw new Error("Java mode requires exercise.expectedResult for Run/Check.");
+      }
+      return { expectedResult: staticExpected, durationMs: null };
+    }
     if (!pyodideReady) {
       await initPyodide();
     }
@@ -197,11 +398,9 @@
   };
 
   const runCode = async () => {
-    const code = editorEl.value || "";
+    const code = mainCode || "";
     runBtn.disabled = true;
-    saveBtn.disabled = true;
-    checkBtn.disabled = true;
-    setStatus("Running...", "running");
+    setStatus("Submitting...", "running");
 
     const attemptId = makeAttemptId();
 
@@ -211,7 +410,7 @@
 
       const studentAnswer = answerEl.value || "";
       const isCorrect = normalizeAnswer(studentAnswer) === normalizeAnswer(expectedResult);
-      resultEl.textContent = isCorrect ? "Success" : "Wrong";
+      resultEl.textContent = isCorrect ? "Success" : `Wrong | Expect Result: ${expectedResult}`;
       resultEl.className = "result-value" + (isCorrect ? " success" : " wrong");
 
       // Send grading event (to be forwarded by acos-server to QuizPetAuthoring)
@@ -236,7 +435,7 @@
 
       // Persist: answer + expected + verdict
       await saveSession(code, expectedResult);
-      setStatus("Run completed", "ready");
+      setStatus("Submitted", "ready");
     } catch (err) {
       const errorText = err && err.message ? err.message : String(err);
       lastExpectedResult = errorText;
@@ -263,50 +462,20 @@
       });
 
       await saveSession(code, errorText);
-      setStatus("Run failed", "error");
+      setStatus("Submit failed", "error");
     } finally {
       runBtn.disabled = false;
-      saveBtn.disabled = false;
-      checkBtn.disabled = false;
     }
   };
 
   runBtn.addEventListener("click", runCode);
-  saveBtn.addEventListener("click", () => saveSession(editorEl.value || "", lastExpectedResult || ""));
 
-  checkBtn.addEventListener("click", async () => {
-    const code = editorEl.value || "";
-    checkBtn.disabled = true;
-    runBtn.disabled = true;
-    saveBtn.disabled = true;
-    setStatus("Checking...", "running");
-    try {
-      const { expectedResult } = await computeExpectedResult(code);
-      lastExpectedResult = expectedResult;
-      expectedEl.textContent = lastExpectedResult;
-
-      const studentAnswer = answerEl.value || "";
-      const isCorrect = normalizeAnswer(studentAnswer) === normalizeAnswer(lastExpectedResult);
-      resultEl.textContent = isCorrect ? "Success" : "Wrong";
-      resultEl.className = "result-value" + (isCorrect ? " success" : " wrong");
-
-      await saveSession(code, lastExpectedResult);
-      setStatus("Expected result shown", "ready");
-    } catch (err) {
-      const errorText = err && err.message ? err.message : String(err);
-      lastExpectedResult = errorText;
-      expectedEl.textContent = errorText;
-      await saveSession(code, errorText);
-      setStatus("Check failed", "error");
-    } finally {
-      checkBtn.disabled = false;
-      runBtn.disabled = false;
-      saveBtn.disabled = false;
-    }
-  });
-
-  initPyodide().catch((err) => {
-    console.error("Pyodide init failed:", err);
-    setStatus("Pyodide load failed", "error");
-  });
+  if (isPythonMode) {
+    initPyodide().catch((err) => {
+      console.error("Pyodide init failed:", err);
+      setStatus("Pyodide load failed", "error");
+    });
+  } else {
+    setStatus("Java mode: Submit uses built-in expectedResult", "ready");
+  }
 })();

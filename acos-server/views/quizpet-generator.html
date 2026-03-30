@@ -3,34 +3,46 @@
 {% block content %}
 <!-- BEGIN quizpet-generator page -->
 <h2>quizpet-generator</h2>
-<p>Select topic and quiz, load by Quiz ID textbox, then convert and import into jstracing-python.</p>
-<p><strong>Target:</strong> content type <code>jstracing</code>, content package <code>jstracing-python</code></p>
+<p>Select topic and quiz, load by Quiz ID textbox, then convert and import into JSTracing content package.</p>
+<p><strong>Target:</strong> content type <code>jstracing</code>, content package <code>{{ sourceContentPackage | default('jstracing-python') }}</code></p>
+<p><strong>Source:</strong> {{ sourceLabel | default('Using local QuizPetAuthoring_Python') }} (route: {{ routeBase | default('/quizpet-generator') }})</p>
+<div class="row" style="margin-bottom: 10px;">
+  <div class="col-md-12">
+    {% if routeBase == '/quizpet-generator' %}
+      <span class="btn btn-primary btn-sm" style="cursor: default;">Using local QuizPetAuthoring_Python</span>
+      <a class="btn btn-default btn-sm" href="/quizpet-generator-pitts" style="margin-left: 8px;">Using adapt2-pitt QuizPetAuthoring_Java</a>
+    {% else %}
+      <a class="btn btn-default btn-sm" href="/quizpet-generator">Using local QuizPetAuthoring_Python</a>
+      <span class="btn btn-primary btn-sm" style="cursor: default; margin-left: 8px;">Using adapt2-pitt QuizPetAuthoring_Java</span>
+    {% endif %}
+  </div>
+</div>
 
 <div class="panel panel-default">
   <div class="panel-heading">QuizPet Question -> Convert + Import</div>
   <div class="panel-body">
     <div class="row">
-      <div class="col-md-3">
+      <div id="topicCol" class="col-md-3">
         <label for="topicSelectInput">Topic</label>
         <select id="topicSelectInput" class="form-control">
           <option value="">No topic selected</option>
         </select>
       </div>
-      <div class="col-md-2">
+      <div id="topicIdCol" class="col-md-2">
         <label for="topicIdInput">Topic ID</label>
         <input id="topicIdInput" class="form-control" type="number" readonly />
       </div>
-      <div class="col-md-3">
+      <div id="quizIdOptionsCol" class="col-md-3">
         <label for="quizIdSelect">Quiz ID options</label>
         <select id="quizIdSelect" class="form-control">
           <option value="">No quiz option</option>
         </select>
       </div>
-      <div class="col-md-2">
+      <div id="quizIdInputCol" class="col-md-2">
         <label for="quizIdInput">Quiz ID (used for Load)</label>
         <input id="quizIdInput" type="number" class="form-control" placeholder="e.g. 2" />
       </div>
-      <div class="col-md-2">
+      <div id="loadQuizBtnCol" class="col-md-2">
         <label>&nbsp;</label>
         <button id="loadQuizBtn" class="btn btn-primary btn-block" type="button">Load Quiz</button>
       </div>
@@ -39,6 +51,12 @@
     <div class="row" style="margin-top: 12px;">
       <div class="col-md-12">
         <div id="loadStatus" class="alert alert-info" style="padding: 8px; margin-bottom: 0;">Status: Ready</div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px;">
+      <div class="col-md-3">
+        <button id="quizIdOnlyToggleBtn" class="btn btn-default btn-block" type="button" style="display: none;">切换为只用 Quiz ID 模式</button>
       </div>
     </div>
 
@@ -66,18 +84,18 @@
 
     <div class="row" style="margin-top: 12px;">
       <div class="col-md-12">
-        <label for="codeInput">Python code</label>
+        <label for="codeInput" id="codeInputLabel">Python code</label>
         <textarea id="codeInput" class="form-control" rows="18" style="font-family: Menlo, Monaco, Consolas, monospace; overflow: auto; resize: vertical;"></textarea>
       </div>
     </div>
 
     <div class="row" style="margin-top: 12px;">
       <div class="col-md-4">
-        <label for="supportFilePickerInput">Or choose support .py file</label>
-        <input id="supportFilePickerInput" class="form-control" type="file" accept=".py,text/x-python,text/plain" />
+        <label for="supportFilePickerInput" id="supportFilePickerLabel">Or choose support .py file</label>
+        <input id="supportFilePickerInput" class="form-control" type="file" accept=".py,.java,text/x-python,text/x-java-source,text/plain" />
       </div>
       <div class="col-md-8">
-        <label for="supportFileContentInput">Support file content (optional)</label>
+        <label for="supportFileContentInput" id="supportFileContentLabel">Support file content (optional)</label>
         <textarea id="supportFileContentInput" class="form-control" rows="6" style="font-family: Menlo, Monaco, Consolas, monospace;" placeholder="Paste stack.py content here when code uses: from stack import Stack"></textarea>
       </div>
     </div>
@@ -111,12 +129,23 @@
 <script>
 // BEGIN quizpet-generator client script
 (function() {
+  var apiBase = '{{ routeBase | default('/quizpet-generator') }}';
+  var sourceKey = '{{ sourceKey | default('local') }}';
+  var isPittsSource = sourceKey === 'pitts';
+
   function byId(id) { return document.getElementById(id); }
 
   var quizIdSelect = byId('quizIdSelect');
   var quizIdInput = byId('quizIdInput');
   var loadQuizBtn = byId('loadQuizBtn');
   var loadStatus = byId('loadStatus');
+  var quizIdOnlyToggleBtn = byId('quizIdOnlyToggleBtn');
+  var topicCol = byId('topicCol');
+  var topicIdCol = byId('topicIdCol');
+  var quizIdOptionsCol = byId('quizIdOptionsCol');
+  var quizIdInputCol = byId('quizIdInputCol');
+  var loadQuizBtnCol = byId('loadQuizBtnCol');
+  var quizIdOnlyMode = false;
 
   var topicIdInput = byId('topicIdInput');
   var topicSelectInput = byId('topicSelectInput');
@@ -125,12 +154,217 @@
   var descriptionInput = byId('descriptionInput');
   var questionInput = byId('questionInput');
   var codeInput = byId('codeInput');
+  var codeInputLabel = byId('codeInputLabel');
+  var supportFilePickerLabel = byId('supportFilePickerLabel');
+  var supportFileContentLabel = byId('supportFileContentLabel');
   var supportFileContentInput = byId('supportFileContentInput');
   var supportFilePickerInput = byId('supportFilePickerInput');
-  var selectedSupportFileName = 'stack.py';
+  var sourceLanguage = isPittsSource ? 'java' : 'python';
+  var selectedSupportFileName = sourceLanguage === 'java' ? 'Stack.java' : 'stack.py';
 
   var importBtn = byId('importBtn');
   var importStatus = byId('importStatus');
+
+  function normalizeLanguage(value) {
+    var v = String(value || '').trim().toLowerCase();
+    return v === 'java' ? 'java' : 'python';
+  }
+
+  function normalizeSupportFileName(rawName, language) {
+    var lang = normalizeLanguage(language || sourceLanguage);
+    var fallback = lang === 'java' ? 'Stack.java' : 'stack.py';
+    var name = String(rawName || '').trim();
+    if (!name) {
+      return fallback;
+    }
+
+    name = name.replace(/\\/g, '/');
+    if (name.indexOf('/') !== -1) {
+      var parts = name.split('/');
+      name = parts[parts.length - 1] || '';
+    }
+    name = name.trim();
+    if (!name) {
+      return fallback;
+    }
+
+    var expectedExt = lang === 'java' ? '.java' : '.py';
+    if (!/\.[a-z0-9]+$/i.test(name)) {
+      name = name + expectedExt;
+    }
+
+    return name;
+  }
+
+  function readFileAsText(file) {
+    return new Promise(function(resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function(evt) {
+        resolve(String((evt && evt.target && evt.target.result) || ''));
+      };
+      reader.onerror = function() {
+        reject(new Error('Failed to read selected support file.'));
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  function cleanQuizTitle(rawTitle, fallback) {
+    var title = String(rawTitle || '').replace(/\.\*/g, '').trim();
+    if (!title) {
+      title = String(fallback || '').replace(/\.\*/g, '').trim();
+    }
+    title = title
+      .replace(/^q_(py|java)_/i, '')
+      .replace(/^q_/i, '')
+      .replace(/\.(py|java)$/i, '')
+      .replace(/_+$/g, '')
+      .trim();
+    if (!title) {
+      title = 'quizpet_exercise';
+    }
+    return title;
+  }
+
+  function extractCodeHeaderFileName(code) {
+    var src = String(code || '').replace(/\r\n/g, '\n');
+    var lines = src.split('\n');
+    for (var i = 0; i < lines.length; i++) {
+      var line = String(lines[i] || '').trim();
+      if (!line) {
+        continue;
+      }
+      line = line.replace(/^#+\s*/, '');
+      line = line.replace(/^\/\/+\s*/, '');
+      line = line.replace(/^\/\*+\s*/, '').replace(/\*\/\s*$/, '');
+      line = line.trim();
+      if (/^[a-zA-Z0-9_.-]+\.(py|java)$/i.test(line)) {
+        return line;
+      }
+      break;
+    }
+    return '';
+  }
+
+  function formatJavaCodeForDisplay(code) {
+    var src = String(code || '').replace(/\r\n/g, '\n');
+    if (!src.trim()) {
+      return src;
+    }
+
+    var out = [];
+    var inString = false;
+    var stringQuote = '';
+    var escapeNext = false;
+    var parenDepth = 0;
+
+    for (var i = 0; i < src.length; i++) {
+      var ch = src[i];
+
+      if (inString) {
+        out.push(ch);
+        if (escapeNext) {
+          escapeNext = false;
+        } else if (ch === '\\') {
+          escapeNext = true;
+        } else if (ch === stringQuote) {
+          inString = false;
+          stringQuote = '';
+        }
+        continue;
+      }
+
+      if (ch === '"' || ch === "'") {
+        inString = true;
+        stringQuote = ch;
+        out.push(ch);
+        continue;
+      }
+
+      if (ch === '(') {
+        parenDepth += 1;
+        out.push(ch);
+        continue;
+      }
+
+      if (ch === ')') {
+        if (parenDepth > 0) {
+          parenDepth -= 1;
+        }
+        out.push(ch);
+        continue;
+      }
+
+      if (ch === '{') {
+        out.push('{');
+        out.push('\n');
+        continue;
+      }
+
+      if (ch === '}') {
+        out.push('\n');
+        out.push('}');
+        out.push('\n');
+        continue;
+      }
+
+      if (ch === ';' && parenDepth === 0) {
+        out.push(';');
+        out.push('\n');
+        continue;
+      }
+
+      out.push(ch);
+    }
+
+    var rawLines = out.join('').split('\n');
+    var lines = [];
+    for (var l = 0; l < rawLines.length; l++) {
+      var trimmed = rawLines[l].trim();
+      if (trimmed) {
+        lines.push(trimmed);
+      }
+    }
+
+    var level = 0;
+    var pretty = [];
+    for (var j = 0; j < lines.length; j++) {
+      var line = lines[j];
+      if (line[0] === '}') {
+        level = Math.max(0, level - 1);
+      }
+      pretty.push(new Array(level + 1).join('    ') + line);
+      if (line[line.length - 1] === '{') {
+        level += 1;
+      }
+    }
+
+    return pretty.join('\n');
+  }
+
+  function applyLanguageUI(language) {
+    var lang = normalizeLanguage(language);
+    sourceLanguage = lang;
+    if (codeInputLabel) {
+      codeInputLabel.textContent = lang === 'java' ? 'Java code' : 'Python code';
+    }
+    if (supportFilePickerLabel) {
+      supportFilePickerLabel.textContent = lang === 'java'
+        ? 'Or choose support .java file'
+        : 'Or choose support .py file';
+    }
+    if (supportFileContentLabel) {
+      supportFileContentLabel.textContent = 'Support file content (optional, ' + lang + ')';
+    }
+    if (supportFileContentInput && !supportFileContentInput.value.trim()) {
+      supportFileContentInput.placeholder = lang === 'java'
+        ? 'Paste helper Java class content here if needed (e.g., Stack.java)'
+        : 'Paste stack.py content here when code uses: from stack import Stack';
+    }
+    if (!selectedSupportFileName || selectedSupportFileName === 'stack.py' || selectedSupportFileName === 'Stack.java') {
+      selectedSupportFileName = lang === 'java' ? 'Stack.java' : 'stack.py';
+    }
+  }
 
   function setStatus(el, type, text) {
     if (!el) {
@@ -144,6 +378,41 @@
     }
     el.className = 'alert ' + type;
     el.textContent = message;
+  }
+
+  function getQuizIdGuidance(prefix) {
+    if (!isPittsSource) {
+      return prefix;
+    }
+    return prefix + ' 请用 Quiz ID 方式加载。';
+  }
+
+  function setElementVisible(el, visible) {
+    if (!el) {
+      return;
+    }
+    el.style.display = visible ? '' : 'none';
+  }
+
+  function setQuizIdOnlyMode(enabled) {
+    quizIdOnlyMode = !!enabled;
+
+    setElementVisible(topicCol, !quizIdOnlyMode);
+    setElementVisible(topicIdCol, !quizIdOnlyMode);
+    setElementVisible(quizIdOptionsCol, !quizIdOnlyMode);
+
+    if (quizIdInputCol) {
+      quizIdInputCol.className = quizIdOnlyMode ? 'col-md-8' : 'col-md-2';
+    }
+    if (loadQuizBtnCol) {
+      loadQuizBtnCol.className = quizIdOnlyMode ? 'col-md-4' : 'col-md-2';
+    }
+
+    if (quizIdOnlyToggleBtn) {
+      quizIdOnlyToggleBtn.textContent = quizIdOnlyMode
+        ? '恢复 Topic + Quiz options 模式'
+        : '切换为只用 Quiz ID 模式';
+    }
   }
 
   function clearTopicOptions() {
@@ -187,14 +456,17 @@
   async function loadTopicOptions() {
     clearTopicOptions();
     try {
-      var resp = await fetch('/quizpet-generator/api/topics');
+      var resp = await fetch(apiBase + '/api/topics');
       var data = await resp.json();
       if (!resp.ok || !data.success) {
         throw new Error(data.error || 'Failed to load topics.');
       }
       renderTopicOptions(data.topics);
+      if (isPittsSource && (!Array.isArray(data.topics) || data.topics.length === 0)) {
+        setStatus(loadStatus, 'alert-warning', getQuizIdGuidance('Pitts 来源未返回 Topic 列表。'));
+      }
     } catch (err) {
-      setStatus(loadStatus, 'alert-warning', 'Topic list unavailable: ' + (err.message || err));
+      setStatus(loadStatus, 'alert-warning', getQuizIdGuidance('Topic list unavailable: ' + (err.message || err)));
     }
   }
 
@@ -206,7 +478,7 @@
 
     setStatus(loadStatus, 'alert-info', 'Loading quiz options for topic #' + topicId + ' ...');
     try {
-      var resp = await fetch('/quizpet-generator/api/quizzes-by-topic/' + encodeURIComponent(topicId));
+      var resp = await fetch(apiBase + '/api/quizzes-by-topic/' + encodeURIComponent(topicId));
       var data = await resp.json();
       if (!resp.ok || !data.success) {
         throw new Error(data.error || 'Failed to load quiz options.');
@@ -216,22 +488,26 @@
       if ((data.quizzes || []).length) {
         setStatus(loadStatus, 'alert-success', 'Topic quiz options loaded.');
       } else {
-        setStatus(loadStatus, 'alert-warning', 'No quiz options found for selected topic.');
+        setStatus(loadStatus, 'alert-warning', getQuizIdGuidance('No quiz options found for selected topic.'));
       }
     } catch (err) {
-      setStatus(loadStatus, 'alert-danger', 'Topic quiz option error: ' + (err.message || err));
+      setStatus(loadStatus, 'alert-danger', getQuizIdGuidance('Topic quiz option error: ' + (err.message || err)));
     }
   }
 
   async function fillForm(quiz) {
     if (!quiz) return;
+    var lang = normalizeLanguage(quiz.language || sourceLanguage);
+    var titleFallback = quiz.codeHeaderFileName || extractCodeHeaderFileName(quiz.code) || ('Quiz ' + (quiz.quizId || ''));
+    var cleanedTitle = cleanQuizTitle(quiz.title, titleFallback);
+    applyLanguageUI(lang);
     quizIdInput.value = quiz.quizId || '';
     topicIdInput.value = quiz.topicId || '';
     rdfIdInput.value = quiz.rdfId || '';
-    titleInput.value = quiz.title || '';
+    titleInput.value = cleanedTitle;
     descriptionInput.value = quiz.description || '';
     questionInput.value = quiz.question || quiz.description || '';
-    codeInput.value = quiz.code || '';
+    codeInput.value = lang === 'java' ? formatJavaCodeForDisplay(quiz.code || '') : (quiz.code || '');
 
     if (quiz.topicId) {
       topicSelectInput.value = String(quiz.topicId);
@@ -263,17 +539,16 @@
       return;
     }
 
-    selectedSupportFileName = file.name || selectedSupportFileName;
+    selectedSupportFileName = normalizeSupportFileName(file.name || selectedSupportFileName, sourceLanguage);
 
-    var reader = new FileReader();
-    reader.onload = function(evt) {
-      supportFileContentInput.value = String((evt && evt.target && evt.target.result) || '');
+    readFileAsText(file)
+      .then(function(content) {
+      supportFileContentInput.value = content;
       setStatus(importStatus, 'alert-info', 'Loaded support file: ' + (file.name || 'unnamed'));
-    };
-    reader.onerror = function() {
+      })
+      .catch(function() {
       setStatus(importStatus, 'alert-danger', 'Failed to read selected support file.');
-    };
-    reader.readAsText(file);
+      });
   });
 
   loadQuizBtn.addEventListener('click', async function() {
@@ -285,7 +560,7 @@
 
     setStatus(loadStatus, 'alert-info', 'Loading quiz #' + quizId + ' ...');
     try {
-      var resp = await fetch('/quizpet-generator/api/quiz/' + encodeURIComponent(quizId));
+      var resp = await fetch(apiBase + '/api/quiz/' + encodeURIComponent(quizId));
       var data = await resp.json();
       if (!resp.ok || !data.success) {
         throw new Error(data.error || 'Load failed.');
@@ -298,20 +573,38 @@
   });
 
   importBtn.addEventListener('click', async function() {
+    var cleanedTitle = cleanQuizTitle(titleInput.value, 'quizpet_exercise');
     var body = {
       quizId: quizIdInput.value,
       topicId: topicIdInput.value,
       topicKey: '',
       topicTitle: '',
       rdfId: rdfIdInput.value,
-      title: titleInput.value,
+      title: cleanedTitle,
       description: descriptionInput.value,
       question: questionInput.value,
       code: codeInput.value
     };
+    body.exerciseName = cleanedTitle;
+    body.language = normalizeLanguage(sourceLanguage);
 
-    var supportFileName = (selectedSupportFileName || 'stack.py').trim();
+    var pickedSupportFile = supportFilePickerInput.files && supportFilePickerInput.files[0];
+    var supportFileName = normalizeSupportFileName(
+      selectedSupportFileName || (pickedSupportFile && pickedSupportFile.name) || '',
+      sourceLanguage
+    );
     var supportFileContent = supportFileContentInput.value || '';
+
+    if (!supportFileContent.trim() && pickedSupportFile) {
+      try {
+        supportFileContent = await readFileAsText(pickedSupportFile);
+        supportFileContentInput.value = supportFileContent;
+      } catch (_fileReadErr) {
+        setStatus(importStatus, 'alert-danger', 'Support file is selected but cannot be read.');
+        return;
+      }
+    }
+
     if (supportFileContent.trim()) {
       if (!supportFileName) {
         setStatus(importStatus, 'alert-warning', 'Support file content is set, but file name is empty.');
@@ -333,13 +626,14 @@
     }
 
     if (!(body.code || '').trim()) {
-      setStatus(importStatus, 'alert-warning', 'Code is empty. Please load or input Python code first.');
+      var langName = normalizeLanguage(sourceLanguage) === 'java' ? 'Java' : 'Python';
+      setStatus(importStatus, 'alert-warning', 'Code is empty. Please load or input ' + langName + ' code first.');
       return;
     }
 
     setStatus(importStatus, 'alert-info', 'Importing...');
     try {
-      var resp = await fetch('/quizpet-generator/api/import', {
+      var resp = await fetch(apiBase + '/api/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
@@ -357,6 +651,15 @@
   });
 
   clearQuizIdOptions();
+  applyLanguageUI(sourceLanguage);
+  if (isPittsSource) {
+    // adapt2 page is forced to Quiz ID mode by design.
+    setElementVisible(quizIdOnlyToggleBtn, false);
+    setStatus(loadStatus, 'alert-info', 'Using adapt2-pitt QuizPetAuthoring_Java：仅支持 Quiz ID 模式，请直接输入 Quiz ID 并点击 Load Quiz。');
+    setQuizIdOnlyMode(true);
+  } else {
+    setQuizIdOnlyMode(false);
+  }
   loadTopicOptions();
 })();
 // END quizpet-generator client script

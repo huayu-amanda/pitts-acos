@@ -4,6 +4,16 @@
 const http = require('http');
 const https = require('https');
 
+let lastFetchQuizDiagnostic = null;
+
+function setLastFetchQuizDiagnostic(diag) {
+  lastFetchQuizDiagnostic = diag || null;
+}
+
+function getLastFetchQuizDiagnostic() {
+  return lastFetchQuizDiagnostic;
+}
+
 function normalizeEnvValue(value) {
   if (typeof value !== 'string') return value;
   // Trim whitespace and remove trailing CR (Windows line endings)
@@ -160,16 +170,22 @@ function httpRequest(method, urlStr, postData, headers, maxRedirects = 5, cookie
  * Reads auth and base URL from environment if not provided.
  * Returns the code string on success, or null on failure.
  */
-async function tryFetchQuizCode(quizId, baseUrl) {
+async function tryFetchQuizCode(quizId, baseUrl, options) {
   if (!quizId) return null;
+  setLastFetchQuizDiagnostic({
+    kind: 'start',
+    quizId: String(quizId)
+  });
+  options = options || {};
+  const loginMode = (options.loginMode || 'compat').toLowerCase();
   const QUIZPET_BASE_URL = (baseUrl || process.env.QUIZPET_BASE_URL) || 'http://host.docker.internal:8080/quizpet';
   try {
     const cookieJar = {};
-    let username = process.env.QUIZPET_USERNAME;
-    let password = process.env.QUIZPET_PASSWORD;
+    let username = options.username || process.env.QUIZPET_USERNAME;
+    let password = options.password || process.env.QUIZPET_PASSWORD;
     let credsSource = {
-      username: username ? 'process.env' : null,
-      password: password ? 'process.env' : null,
+      username: options.username ? 'options' : (username ? 'process.env' : null),
+      password: options.password ? 'options' : (password ? 'process.env' : null),
     };
 
     // If env vars not set, try to read acos-jstracing/.env in package root
@@ -219,39 +235,56 @@ async function tryFetchQuizCode(quizId, baseUrl) {
         const loginPageUrl = QUIZPET_BASE_URL.replace(/\/$/, '') + '/login';
         console.info('[jstracing][fetch_quiz] INFO: GET login page', loginPageUrl);
         const loginPageRes = await httpRequest('GET', loginPageUrl, null, {'Accept':'text/html'}, 5, cookieJar);
-        const loginBody = (loginPageRes && loginPageRes.body) ? loginPageRes.body : '';
-        // extract hidden inputs
-        const hiddenFields = {};
-        try {
-          const inputRe = /<input[^>]*type=["']hidden["'][^>]*>/gi;
-          let match;
-          while ((match = inputRe.exec(loginBody)) !== null) {
-            const nameMatch = match[0].match(/name=["']([^"']+)["']/i);
-            const valMatch = match[0].match(/value=["']([^"']*)["']/i);
-            if (nameMatch) hiddenFields[nameMatch[1]] = valMatch ? valMatch[1] : '';
-          }
-        } catch (e) {
-          // ignore parse errors
-        }
         // IMPORTANT: do NOT trust the login page <form action>.
         // In this app it may include URL rewriting like `;jsessionid=...`, which can cause 405 for POST.
         // Always POST to the stable Spring Security endpoint.
         const loginPostUrl = QUIZPET_BASE_URL.replace(/\/$/, '') + '/j_spring_security_check';
 
-        // build form fields: include both common Spring names and generic names to maximize compatibility
-        const formFields = Object.assign({}, hiddenFields);
-        formFields['j_username'] = username;
-        formFields['j_password'] = password;
-        // also include non-j_ variants in case the form expects them
-        formFields['username'] = username;
-        formFields['password'] = password;
+        // pitts mode follows the verified curl workflow exactly: cookie + username/password only.
+        // compat mode keeps the previous broad form-field strategy for local deployments.
+        const formFields = {};
+        if (loginMode === 'cookie-username-password') {
+          formFields['username'] = username;
+          formFields['password'] = password;
+        } else {
+          const loginBody = (loginPageRes && loginPageRes.body) ? loginPageRes.body : '';
+          const hiddenFields = {};
+          try {
+            const inputRe = /<input[^>]*type=["']hidden["'][^>]*>/gi;
+            let match;
+            while ((match = inputRe.exec(loginBody)) !== null) {
+              const nameMatch = match[0].match(/name=["']([^"']+)["']/i);
+              const valMatch = match[0].match(/value=["']([^"']*)["']/i);
+              if (nameMatch) hiddenFields[nameMatch[1]] = valMatch ? valMatch[1] : '';
+            }
+          } catch (e) {
+            // ignore parse errors
+          }
+
+          Object.keys(hiddenFields).forEach((k) => {
+            formFields[k] = hiddenFields[k];
+          });
+          formFields['j_username'] = username;
+          formFields['j_password'] = password;
+          formFields['username'] = username;
+          formFields['password'] = password;
+        }
 
         const params = new URLSearchParams();
         Object.keys(formFields).forEach(k => params.append(k, formFields[k]));
         const formStr = params.toString();
-        console.info('[jstracing][fetch_quiz] INFO: POST login to', loginPostUrl, '(forced, ignoring form action)', 'with fields', Object.keys(formFields));
+        console.info('[jstracing][fetch_quiz] INFO: POST login to', loginPostUrl, '(forced, ignoring form action)', 'mode=', loginMode, 'with fields', Object.keys(formFields));
         const loginRes = await httpRequest('POST', loginPostUrl, formStr, {'Content-Type':'application/x-www-form-urlencoded'}, 5, cookieJar);
         console.info('[jstracing][fetch_quiz] INFO: login response', loginRes && loginRes.statusCode);
+        if (loginRes && loginRes.headers) {
+          console.info('[jstracing][fetch_quiz] INFO: login response content-type', loginRes.headers['content-type'] || null);
+          console.info('[jstracing][fetch_quiz] INFO: login response location', loginRes.headers.location || null);
+        }
+        console.info('[jstracing][fetch_quiz] INFO: cookie jar keys after login', Object.keys(cookieJar || {}));
+        if (loginRes && typeof loginRes.body === 'string') {
+          const looksLikeLoginPage = /Quizpet\s*-\s*Sign\s*In/i.test(loginRes.body) || /j_spring_security_check/i.test(loginRes.body);
+          console.info('[jstracing][fetch_quiz] INFO: login appears successful=', !looksLikeLoginPage);
+        }
         if (loginRes && loginRes.body && loginRes.body.length>0) {
           console.debug('[jstracing][fetch_quiz] DEBUG: login response snippet:', loginRes.body.substring(0,500));
         }
@@ -266,15 +299,31 @@ async function tryFetchQuizCode(quizId, baseUrl) {
       console.info('[jstracing][fetch_quiz] INFO: GET quiz URL', quizUrl);
       quizRes = await httpRequest('GET', quizUrl, null, {'Accept':'application/json, text/plain, */*'}, 5, cookieJar);
       console.info('[jstracing][fetch_quiz] INFO: quiz response status', quizRes && quizRes.statusCode);
+      if (quizRes && quizRes.headers) {
+        console.info('[jstracing][fetch_quiz] INFO: quiz response content-type', quizRes.headers['content-type'] || null);
+        console.info('[jstracing][fetch_quiz] INFO: quiz response location', quizRes.headers.location || null);
+      }
     } catch (e) {
       console.warn('[jstracing][fetch_quiz] WARN: request failed for quizUrl', quizUrl, e && e.message ? e.message : e);
+      setLastFetchQuizDiagnostic({
+        kind: 'network-error',
+        quizId: String(quizId),
+        message: e && e.message ? e.message : String(e || 'Unknown network error')
+      });
       return null;
     }
     // Accept a successful 2xx with JSON body, or fallback to parse body anyway
     if (!quizRes || typeof quizRes.body !== 'string') {
       console.warn('[jstracing][fetch_quiz] WARN: empty response body for quizId', quizId);
+      setLastFetchQuizDiagnostic({
+        kind: 'empty-response',
+        quizId: String(quizId),
+        statusCode: quizRes && quizRes.statusCode ? quizRes.statusCode : null
+      });
       return null;
     }
+    const quizResContentType = quizRes && quizRes.headers ? (quizRes.headers['content-type'] || '') : '';
+    const quizResBodySnippet = (quizRes.body || '').substring(0, 300);
     // try parse JSON
     let parsed = null;
     try {
@@ -284,6 +333,24 @@ async function tryFetchQuizCode(quizId, baseUrl) {
       console.warn('[jstracing][fetch_quiz] WARN: response not JSON for quizId', quizId);
       console.debug('[jstracing][fetch_quiz] DEBUG: response headers:', quizRes.headers);
       console.debug('[jstracing][fetch_quiz] DEBUG: response body snippet:', (quizRes.body||'').substring(0,200));
+      setLastFetchQuizDiagnostic({
+        kind: 'non-json',
+        quizId: String(quizId),
+        statusCode: quizRes.statusCode || null,
+        contentType: quizResContentType || null,
+        bodySnippet: quizResBodySnippet
+      });
+      return null;
+    }
+
+    if (parsed && parsed.success === false && typeof parsed.message === 'string' && /no such quiz id/i.test(parsed.message)) {
+      setLastFetchQuizDiagnostic({
+        kind: 'no-such-quiz-id',
+        quizId: String(quizId),
+        statusCode: quizRes.statusCode || null,
+        contentType: quizResContentType || null,
+        message: parsed.message
+      });
       return null;
     }
 
@@ -305,6 +372,12 @@ async function tryFetchQuizCode(quizId, baseUrl) {
               mapping: inst.mapping,
             });
           }
+          setLastFetchQuizDiagnostic({
+            kind: 'success',
+            quizId: String(quizId),
+            statusCode: quizRes.statusCode || null,
+            contentType: quizResContentType || null
+          });
           return inst.code;
         }
       }
@@ -329,6 +402,12 @@ async function tryFetchQuizCode(quizId, baseUrl) {
               mapping: inst.mapping,
             });
           }
+          setLastFetchQuizDiagnostic({
+            kind: 'success',
+            quizId: String(quizId),
+            statusCode: quizRes.statusCode || null,
+            contentType: quizResContentType || null
+          });
           return inst.code;
         }
       }
@@ -336,11 +415,23 @@ async function tryFetchQuizCode(quizId, baseUrl) {
 
     // As a final fallback, log the parsed structure for debugging
     console.warn('[jstracing][fetch_quiz] WARN: parsed response did not contain code for quizId', quizId, 'parsedKeys=', Object.keys(parsed || {}));
+    setLastFetchQuizDiagnostic({
+      kind: 'json-without-code',
+      quizId: String(quizId),
+      statusCode: quizRes.statusCode || null,
+      contentType: quizResContentType || null,
+      parsedKeys: Object.keys(parsed || {})
+    });
     return null;
   } catch (e) {
     console.warn('[jstracing][fetch_quiz] ERROR fetching quiz:', e && e.message ? e.message : e);
+    setLastFetchQuizDiagnostic({
+      kind: 'unexpected-error',
+      quizId: String(quizId),
+      message: e && e.message ? e.message : String(e || 'Unknown error')
+    });
     return null;
   }
 }
 
-module.exports = { tryFetchQuizCode };
+module.exports = { tryFetchQuizCode, getLastFetchQuizDiagnostic };
