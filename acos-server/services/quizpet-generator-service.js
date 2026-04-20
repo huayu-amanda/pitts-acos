@@ -41,12 +41,58 @@ var cleanQuizTitle = function(rawTitle, fallback) {
   return title;
 };
 
-var buildQuizResponse = function(quiz, quizId, code) {
+var resolveLanguageToken = function(rawValue) {
+  var value = String(rawValue || '').trim().toLowerCase();
+  if (!value) {
+    return '';
+  }
+
+  if (value === 'java' || /^q_?java$/.test(value) || value.indexOf('java') !== -1) {
+    return 'java';
+  }
+
+  if (
+    value === 'python' ||
+    value === 'py' ||
+    /^q_?py(thon)?$/.test(value) ||
+    value.indexOf('python') !== -1
+  ) {
+    return 'python';
+  }
+
+  return '';
+};
+
+var inferQuizLanguage = function(quiz, code, fallbackLanguage) {
+  var q = quiz || {};
+  var fallback = String(fallbackLanguage || 'python').trim().toLowerCase() === 'java' ? 'java' : 'python';
+
+  var candidates = [q.domain, q.language, q.lang, q.quizDomain, q.rdfId, q.rdfIdDisplay];
+  for (var i = 0; i < candidates.length; i++) {
+    var resolved = resolveLanguageToken(candidates[i]);
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  var headerFileName = extractCodeHeaderFileName(code);
+  if (/\.java$/i.test(headerFileName)) {
+    return 'java';
+  }
+  if (/\.py$/i.test(headerFileName)) {
+    return 'python';
+  }
+
+  return fallback;
+};
+
+var buildQuizResponse = function(quiz, quizId, code, fallbackLanguage) {
   var q = quiz || {};
   var resolvedCode = code || '';
   var codeHeaderFileName = extractCodeHeaderFileName(resolvedCode);
   var titleFallback = codeHeaderFileName || ('Quiz ' + quizId);
   var resolvedTitle = cleanQuizTitle(q.title, titleFallback);
+  var language = inferQuizLanguage(q, resolvedCode, fallbackLanguage);
 
   return {
     quizId: q.quizId || quizId,
@@ -56,7 +102,9 @@ var buildQuizResponse = function(quiz, quizId, code) {
     description: q.decp || q.description || '',
     question: q.decp || q.question || q.description || '',
     code: resolvedCode,
-    codeHeaderFileName: codeHeaderFileName || ''
+    codeHeaderFileName: codeHeaderFileName || '',
+    language: language,
+    domain: language
   };
 };
 
@@ -66,8 +114,10 @@ var createQuizpetGeneratorService = function(deps) {
   var httpGetJson = deps.httpGetJson;
   var getQuizPetBaseUrl = deps.getQuizPetBaseUrl;
   var pickQuizFromServerMessage = deps.pickQuizFromServerMessage;
-  var tryFetchQuizCode = deps.tryFetchQuizCode;
+  // var tryFetchQuizCode = deps.tryFetchQuizCode; // Disabled for now: login-first flow uses tryFetchQuizData only.
+  var tryFetchQuizData = deps.tryFetchQuizData;
   var getFetchQuizDiagnostic = deps.getFetchQuizDiagnostic;
+  var defaultLanguage = String(deps.defaultLanguage || 'python').trim().toLowerCase() === 'java' ? 'java' : 'python';
 
   if (typeof httpGetJson !== 'function') {
     throw new Error('quizpet-generator-service requires httpGetJson function.');
@@ -81,55 +131,36 @@ var createQuizpetGeneratorService = function(deps) {
 
   var loadQuizById = function(quizId) {
     var baseUrl = getQuizPetBaseUrl();
-    var quizByIdUrl = baseUrl + '/quiz/id/' + quizId;
-    var metadataError = null;
+    if (typeof tryFetchQuizData !== 'function') {
+      throw new Error('QuizPet authenticated fetch is not available in this deployment.');
+    }
 
-    return Promise.resolve()
-      .then(function() {
-        // QuizPet may redirect unauthenticated requests to an HTML login page.
-        // Treat non-JSON metadata as recoverable and still try code fetch fallback.
-        return httpGetJson(quizByIdUrl).catch(function(err) {
-          metadataError = err || null;
-          return null;
-        });
-      })
-      .then(function(serverMessage) {
-        var quiz = pickQuizFromServerMessage(serverMessage) || null;
-        var hasNoSuchQuizId = !!(serverMessage && typeof serverMessage.message === 'string' && /no such quiz id/i.test(serverMessage.message));
+    return Promise.resolve(tryFetchQuizData(quizId, baseUrl))
+      .then(function(fetchedQuizData) {
+        var quiz = fetchedQuizData && fetchedQuizData.quizObj ? fetchedQuizData.quizObj : null;
+        var code = fetchedQuizData && typeof fetchedQuizData.code === 'string'
+          ? fetchedQuizData.code
+          : (quiz && quiz.code ? quiz.code : '');
 
-        var codePromise = Promise.resolve(quiz && quiz.code ? quiz.code : '');
-        if (typeof tryFetchQuizCode === 'function') {
-          codePromise = Promise.resolve(tryFetchQuizCode(quizId, baseUrl)).catch(function() {
-            return null;
-          }).then(function(fetchedCode) {
-            return fetchedCode || (quiz && quiz.code) || '';
-          });
+        if (!quiz && !code) {
+          var fetchDiag = (typeof getFetchQuizDiagnostic === 'function') ? getFetchQuizDiagnostic() : null;
+
+          if (fetchDiag && fetchDiag.kind === 'no-such-quiz-id') {
+            throw new Error('QuizPet returned "No such quiz id." for quiz ID ' + quizId + '.');
+          }
+          if (fetchDiag && fetchDiag.statusCode === 500) {
+            throw new Error('QuizPet returned HTTP 500 for quiz ID ' + quizId + ' (remote backend error).');
+          }
+          if (fetchDiag && fetchDiag.kind === 'non-json') {
+            var ct = fetchDiag.contentType ? fetchDiag.contentType : 'unknown content-type';
+            var sc = fetchDiag.statusCode ? fetchDiag.statusCode : 'unknown status';
+            throw new Error('QuizPet returned non-JSON for quiz ID ' + quizId + ' (HTTP ' + sc + ', ' + ct + ').');
+          }
+
+          throw new Error('QuizPet did not return usable quiz data for quiz ID ' + quizId + '.');
         }
 
-        return codePromise.then(function(code) {
-          if (!quiz && !code) {
-            var fetchDiag = (typeof getFetchQuizDiagnostic === 'function') ? getFetchQuizDiagnostic() : null;
-
-            if (hasNoSuchQuizId || (fetchDiag && fetchDiag.kind === 'no-such-quiz-id')) {
-              throw new Error('QuizPet returned "No such quiz id." for quiz ID ' + quizId + '.');
-            }
-
-            var fetchStatusCode = fetchDiag && fetchDiag.statusCode ? fetchDiag.statusCode : null;
-            var metadataStatusCode = metadataError && metadataError.statusCode ? metadataError.statusCode : null;
-            if (fetchStatusCode === 500 || metadataStatusCode === 500) {
-              throw new Error('QuizPet returned HTTP 500 for quiz ID ' + quizId + ' (remote backend error).');
-            }
-
-            if (fetchDiag && fetchDiag.kind === 'non-json') {
-              var ct = fetchDiag.contentType ? fetchDiag.contentType : 'unknown content-type';
-              var sc = fetchDiag.statusCode ? fetchDiag.statusCode : 'unknown status';
-              throw new Error('QuizPet returned non-JSON for quiz ID ' + quizId + ' (HTTP ' + sc + ', ' + ct + ').');
-            }
-
-            throw new Error('QuizPet did not return usable quiz data for quiz ID ' + quizId + '.');
-          }
-          return buildQuizResponse(quiz, quizId, code);
-        });
+        return buildQuizResponse(quiz, quizId, code, defaultLanguage);
       });
   };
 

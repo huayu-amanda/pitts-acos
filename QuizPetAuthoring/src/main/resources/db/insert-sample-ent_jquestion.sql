@@ -3,7 +3,7 @@
 -- Run with:
 -- docker exec -i quizpet-mysql mariadb -uroot -prootpassword < insert-sample-ent_jquestion-topics.sql
 
-USE webex21;
+USE quizpet;
 
 CREATE TABLE IF NOT EXISTS `ent_jquestion` (
   `QuestionID` INT NOT NULL AUTO_INCREMENT,
@@ -16,10 +16,10 @@ CREATE TABLE IF NOT EXISTS `ent_jquestion` (
   PRIMARY KEY (`QuestionID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Topic 1: used by existing sample quiz (quizId=1)
+-- Topic 900: used by sample quiz 900
 INSERT INTO `ent_jquestion` (`QuestionID`, `AuthorID`, `GroupID`, `Title`, `Description`, `Privacy`, `domain`)
 VALUES (
-  1,
+  900,
   1,
   1,
   'q_py_topic_expression_basics',
@@ -35,10 +35,10 @@ ON DUPLICATE KEY UPDATE
   `Privacy` = VALUES(`Privacy`),
   `domain` = VALUES(`domain`);
 
--- Topic 2: if statement
+-- Topic 901: if statement
 INSERT INTO `ent_jquestion` (`QuestionID`, `AuthorID`, `GroupID`, `Title`, `Description`, `Privacy`, `domain`)
 VALUES (
-  2,
+  901,
   1,
   1,
   'q_py_topic_if_statement',
@@ -54,10 +54,10 @@ ON DUPLICATE KEY UPDATE
   `Privacy` = VALUES(`Privacy`),
   `domain` = VALUES(`domain`);
 
--- Topic 3: loop
+-- Topic 902: loop
 INSERT INTO `ent_jquestion` (`QuestionID`, `AuthorID`, `GroupID`, `Title`, `Description`, `Privacy`, `domain`)
 VALUES (
-  3,
+  902,
   1,
   1,
   'q_py_topic_loop',
@@ -73,10 +73,10 @@ ON DUPLICATE KEY UPDATE
   `Privacy` = VALUES(`Privacy`),
   `domain` = VALUES(`domain`);
 
--- Topic 4: stack
+-- Topic 903: stack
 INSERT INTO `ent_jquestion` (`QuestionID`, `AuthorID`, `GroupID`, `Title`, `Description`, `Privacy`, `domain`)
 VALUES (
-  4,
+  903,
   1,
   1,
   'q_py_topic_stack',

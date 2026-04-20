@@ -1,6 +1,7 @@
 # logs & temp
 *.log
 *.tmp
+cookies.txt
 
 # env / secrets (never commit)
 .env

@@ -163,18 +163,12 @@ public class ConceptService {
 		// pb.redirectErrorStream(true);
 		Process process = pb.start();
 
-		// 构造 JSON payload：{"code": "...", "params": {...}, "filename": "..."}
+		// 构造 JSON payload：{"code": "...", "filename": "..."}
 		try (OutputStream os = process.getOutputStream()) {
 			JSONObject payload = new JSONObject();
 			payload.put("code", code);
 			// 如果有真实的文件名，可以从别处传进来，这里先写死 Tester.py
 			payload.put("filename", "Tester.py");
-			// 示例参数；后续你可以改成从 DB 或配置中读取
-			JSONObject params = new JSONObject();
-			params.put("X", 1);
-			params.put("Y", 2);
-			params.put("OFFSET", 0);
-			payload.put("params", params);
 
 			byte[] bytes = payload.toString().getBytes("UTF-8");
 

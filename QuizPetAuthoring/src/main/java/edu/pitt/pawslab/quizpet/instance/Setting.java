@@ -6,7 +6,7 @@ public class Setting {
 	
 	public final static String DOMAIN = "py";
 	public final static String QPYPREFIX = "q_py";
-	public final static String DBNAME = "webex21";
+	public final static String DBNAME = "quizpet";
 	public final static String TIMEFORMAT = "MM/dd/yyyy HH:mm:ss";
 	
 	public final static Pattern PYTHONPREFFIX = Pattern.compile("^q_py_(?=.*)");

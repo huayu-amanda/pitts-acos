@@ -2,31 +2,31 @@
 
 module.exports = [
   {
-    topicId: 1,
+    topicId: 100,
     key: 'q_py_topic_expression_basics',
     title: 'Expression Basics (sample quiz topic)',
     sampleQuizzes: [],
-    hiddenQuizIds: [1]
+    hiddenQuizIds: [900]
   },
   {
-    topicId: 2,
+    topicId: 101,
     key: 'q_py_topic_if_statement',
     title: 'If Statement',
     sampleQuizzes: [
-      { quizId: 2, title: 'Quiz 2' },
-      { quizId: 4, title: 'Quiz 4' }
+      { quizId: 901, title: 'Quiz 901' },
+      { quizId: 903, title: 'Quiz 903' }
     ]
   },
   {
-    topicId: 3,
+    topicId: 102,
     key: 'q_py_topic_loop',
     title: 'Loop',
-    sampleQuizzes: [{ quizId: 3, title: 'Quiz 3' }]
+    sampleQuizzes: [{ quizId: 902, title: 'Quiz 902' }]
   },
   {
-    topicId: 4,
+    topicId: 103,
     key: 'q_py_topic_stack',
     title: 'Stack',
-    sampleQuizzes: [{ quizId: 4, title: 'Quiz 4' }]
+    sampleQuizzes: [{ quizId: 903, title: 'Quiz 903' }]
   }
 ];

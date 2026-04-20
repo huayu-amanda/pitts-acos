@@ -1,19 +1,34 @@
 -- insert-sample-ent_user-testuser.sql
--- Purpose: insert/update local test account used by QuizPet login.
+-- Purpose: insert/update local test accounts used by QuizPet login.
 -- Notes:
 -- 1) QuizPet validates password using PBKDF2 format: iterations:salt:hash
--- 2) The hash below corresponds to password: testpass
+-- 2) Both testuser and adminuser use password: testpass
 -- 3) Run with: docker exec -i quizpet-mysql mariadb -uroot -prootpassword < insert-sample-ent_user-testuser.sql
 
-USE webex21;
+USE quizpet;
 
+-- Insert testuser (role: user)
 INSERT INTO `ent_user` (`id`, `login`, `password`, `name`, `role`)
 VALUES (
-  1,
+  999,
   'testuser',
   '1000:2785596d1d8e73c8b05fbf106958c9bea0c087db2c6e04f8:bdd900be49a927bd3bda0cbf2a9670a7c072721c3b4bb403',
   'Test User',
-  'student'
+  'user'
+)
+ON DUPLICATE KEY UPDATE
+  `password` = VALUES(`password`),
+  `name` = VALUES(`name`),
+  `role` = VALUES(`role`);
+
+-- Insert adminuser (role: admin)
+INSERT INTO `ent_user` (`id`, `login`, `password`, `name`, `role`)
+VALUES (
+  998,
+  'adminuser',
+  '1000:2785596d1d8e73c8b05fbf106958c9bea0c087db2c6e04f8:bdd900be49a927bd3bda0cbf2a9670a7c072721c3b4bb403',
+  'Admin User',
+  'admin'
 )
 ON DUPLICATE KEY UPDATE
   `password` = VALUES(`password`),

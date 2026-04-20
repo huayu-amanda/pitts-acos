@@ -7,19 +7,23 @@ var http = require('http');
 var https = require('https');
 var createQuizpetGeneratorService = require('../services/quizpet-generator-service');
 
-var tryFetchQuizCode = null;
+// var tryFetchQuizCode = null; // Disabled for now: generator load-quiz uses tryFetchQuizData only.
+var tryFetchQuizData = null;
 var getLastFetchQuizDiagnostic = null;
 try {
   var fetchQuizModuleLocal = require(path.join(__dirname, '..', '..', 'acos-jstracing', 'lib', 'jstracing', 'fetch_quiz'));
-  tryFetchQuizCode = fetchQuizModuleLocal.tryFetchQuizCode;
+  // tryFetchQuizCode = fetchQuizModuleLocal.tryFetchQuizCode;
+  tryFetchQuizData = fetchQuizModuleLocal.tryFetchQuizData;
   getLastFetchQuizDiagnostic = fetchQuizModuleLocal.getLastFetchQuizDiagnostic;
 } catch (e1) {
   try {
     var fetchQuizModuleNodeModules = require(path.join(__dirname, '..', 'node_modules', 'acos-jstracing', 'lib', 'jstracing', 'fetch_quiz'));
-    tryFetchQuizCode = fetchQuizModuleNodeModules.tryFetchQuizCode;
+    // tryFetchQuizCode = fetchQuizModuleNodeModules.tryFetchQuizCode;
+    tryFetchQuizData = fetchQuizModuleNodeModules.tryFetchQuizData;
     getLastFetchQuizDiagnostic = fetchQuizModuleNodeModules.getLastFetchQuizDiagnostic;
   } catch (e2) {
-    tryFetchQuizCode = null;
+    // tryFetchQuizCode = null;
+    tryFetchQuizData = null;
     getLastFetchQuizDiagnostic = null;
   }
 }
@@ -252,12 +256,13 @@ var resolveGeneratorSources = function() {
   return {
     local: {
       key: 'local',
-      label: 'Using local QuizPetAuthoring_Python',
+      label: 'Using local QuizPetAuthoring',
       routeBase: '/quizpet-generator',
       contentPackage: 'jstracing-python',
       quizpetBaseUrl: localBase,
-      username: process.env.QUIZPET_USERNAME_LOCAL || process.env.QUIZPET_USERNAME || '',
-      password: process.env.QUIZPET_PASSWORD_LOCAL || process.env.QUIZPET_PASSWORD || ''
+      // Generator page uses admin account to load and author quizzes
+      username: process.env.QUIZPET_USERNAME_ADMIN || process.env.QUIZPET_USERNAME_LOCAL || process.env.QUIZPET_USERNAME || '',
+      password: process.env.QUIZPET_PASSWORD_ADMIN || process.env.QUIZPET_PASSWORD_LOCAL || process.env.QUIZPET_PASSWORD || ''
     },
     pitts: {
       key: 'pitts',
@@ -280,10 +285,20 @@ var createQuizpetRouter = function(handlers, sourceConfig) {
     return sourceConfig.quizpetBaseUrl;
   };
 
-  var tryFetchQuizCodeWithSource = null;
-  if (typeof tryFetchQuizCode === 'function') {
-    tryFetchQuizCodeWithSource = function(quizId, baseUrl) {
-      return tryFetchQuizCode(quizId, baseUrl, {
+  // var tryFetchQuizCodeWithSource = null;
+  var tryFetchQuizDataWithSource = null;
+  // if (typeof tryFetchQuizCode === 'function') {
+  //   tryFetchQuizCodeWithSource = function(quizId, baseUrl) {
+  //     return tryFetchQuizCode(quizId, baseUrl, {
+  //       username: sourceConfig.username,
+  //       password: sourceConfig.password,
+  //       loginMode: sourceConfig.key === 'pitts' ? 'cookie-username-password' : 'compat'
+  //     });
+  //   };
+  // }
+  if (typeof tryFetchQuizData === 'function') {
+    tryFetchQuizDataWithSource = function(quizId, baseUrl) {
+      return tryFetchQuizData(quizId, baseUrl, {
         username: sourceConfig.username,
         password: sourceConfig.password,
         loginMode: sourceConfig.key === 'pitts' ? 'cookie-username-password' : 'compat'
@@ -295,8 +310,10 @@ var createQuizpetRouter = function(handlers, sourceConfig) {
     httpGetJson: httpGetJson,
     getQuizPetBaseUrl: getQuizPetBaseUrl,
     pickQuizFromServerMessage: pickQuizFromServerMessage,
-    tryFetchQuizCode: tryFetchQuizCodeWithSource,
-    getFetchQuizDiagnostic: (typeof getLastFetchQuizDiagnostic === 'function') ? getLastFetchQuizDiagnostic : null
+    // tryFetchQuizCode: tryFetchQuizCodeWithSource,
+    tryFetchQuizData: tryFetchQuizDataWithSource,
+    getFetchQuizDiagnostic: (typeof getLastFetchQuizDiagnostic === 'function') ? getLastFetchQuizDiagnostic : null,
+    defaultLanguage: sourceLanguage
   });
 
   router.get('/', function(req, res) {
@@ -510,6 +527,7 @@ var createQuizpetRouter = function(handlers, sourceConfig) {
       title: title || exerciseName,
       description: description,
       language: language,
+      domain: language,
       code: code,
       question: question || 'What is the output?'
     };

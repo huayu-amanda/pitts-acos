@@ -7,6 +7,7 @@ public class Quiz {
 	
 	private int quizId;
 	private int topicId;
+	private StringBuilder domain;
 	private StringBuilder rdfId;
 	private int version = 0;
 	
@@ -43,6 +44,14 @@ public class Quiz {
 
 	public void setTopicId(int topicId) {
 		this.topicId = topicId;
+	}
+
+	public StringBuilder getDomain() {
+		return domain;
+	}
+
+	public void setDomain(StringBuilder domain) {
+		this.domain = domain;
 	}
 
 	public StringBuilder getRdfId() {

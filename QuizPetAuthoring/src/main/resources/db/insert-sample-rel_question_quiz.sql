@@ -1,47 +1,36 @@
 -- insert-sample-rel_question_quiz-quizs.sql
 -- Purpose: create quiz-topic relations required by QuizService.getQuizById(topicId lookup).
 -- Quiz-topic mappings:
---   Quiz 1 -> Topic 1
---   Quiz 2 -> Topic 2
---   Quiz 3 -> Topic 3
---   Quiz 4 -> Topic 2 (if statement)
---   Quiz 4 -> Topic 4 (stack)
+--   Quiz 900 -> Topic 900
+--   Quiz 901 -> Topic 901
+--   Quiz 902 -> Topic 902
+--   Quiz 903 -> Topic 901 (if statement)
+--   Quiz 903 -> Topic 903 (stack)
 -- Run with: docker exec -i quizpet-mysql mariadb -uroot -prootpassword < insert-sample-rel_question_quiz-quizs.sql
 
-USE webex21;
-
--- Ensure topic row exists for QuestionID=1 (minimal fields).
-INSERT INTO `ent_jquestion` (`QuestionID`, `AuthorID`, `GroupID`, `Title`, `Description`, `Privacy`, `domain`)
-VALUES (1, 1, 1, 'Sample Topic', 'Sample topic for quiz relation', 0, 'py')
-ON DUPLICATE KEY UPDATE
-  `AuthorID` = VALUES(`AuthorID`),
-  `GroupID` = VALUES(`GroupID`),
-  `Title` = VALUES(`Title`),
-  `Description` = VALUES(`Description`),
-  `Privacy` = VALUES(`Privacy`),
-  `domain` = VALUES(`domain`);
+USE quizpet;
 
 INSERT INTO `rel_question_quiz` (`QuizID`, `QuestionID`)
-VALUES (1, 1)
+VALUES (900, 900)
 ON DUPLICATE KEY UPDATE
   `QuestionID` = VALUES(`QuestionID`);
 
 INSERT INTO `rel_question_quiz` (`QuizID`, `QuestionID`)
-VALUES (2, 2)
+VALUES (901, 901)
 ON DUPLICATE KEY UPDATE
   `QuestionID` = VALUES(`QuestionID`);
 
 INSERT INTO `rel_question_quiz` (`QuizID`, `QuestionID`)
-VALUES (3, 3)
+VALUES (902, 902)
 ON DUPLICATE KEY UPDATE
   `QuestionID` = VALUES(`QuestionID`);
 
 INSERT INTO `rel_question_quiz` (`QuizID`, `QuestionID`)
-VALUES (4, 2)
+VALUES (903, 901)
 ON DUPLICATE KEY UPDATE
   `QuestionID` = VALUES(`QuestionID`);
 
 INSERT INTO `rel_question_quiz` (`QuizID`, `QuestionID`)
-VALUES (4, 4)
+VALUES (903, 903)
 ON DUPLICATE KEY UPDATE
   `QuestionID` = VALUES(`QuestionID`);

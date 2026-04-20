@@ -68,17 +68,99 @@ function getMinMaxFromQuiz(quizObj) {
   return { min, max };
 }
 
-function instantiatePlaceholders(code, quizObj) {
-  if (typeof code !== 'string') return { code, mapping: {}, range: null };
+function pickRandomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
 
-  // Find ${NAME} placeholders
-  const re = /\$\{([A-Za-z0-9_]+)\}/g;
+function evaluateNumericExpression(expr) {
+  const trimmed = String(expr || '').trim();
+  if (!trimmed) throw new Error('empty expression in _eval()');
+  if (!/^[0-9+\-*/%().\s]+$/.test(trimmed)) {
+    throw new Error(`unsafe expression in _eval(): ${trimmed}`);
+  }
+  // Expression is restricted to numeric operators and parentheses only.
+  const value = Function(`"use strict"; return (${trimmed});`)();
+  if (typeof value !== 'number' || !Number.isFinite(value)) {
+    throw new Error(`non-finite expression result in _eval(): ${trimmed}`);
+  }
+  return Number.isInteger(value) ? String(value) : String(value);
+}
+
+function replaceEvalExpressions(code) {
+  let text = code;
+  let evalCount = 0;
+  const errors = [];
+
+  // Resolve from right to left so nested _eval(...) are handled safely.
+  for (let pass = 0; pass < 200; pass += 1) {
+    const start = text.lastIndexOf('_eval(');
+    if (start < 0) break;
+
+    let depth = 1;
+    let end = -1;
+    for (let i = start + 6; i < text.length; i += 1) {
+      const ch = text[i];
+      if (ch === '(') depth += 1;
+      else if (ch === ')') {
+        depth -= 1;
+        if (depth === 0) {
+          end = i;
+          break;
+        }
+      }
+    }
+
+    if (end < 0) {
+      errors.push('unbalanced _eval(...) expression');
+      break;
+    }
+
+    const expr = text.slice(start + 6, end);
+    try {
+      const result = evaluateNumericExpression(expr);
+      text = `${text.slice(0, start)}${result}${text.slice(end + 1)}`;
+      evalCount += 1;
+    } catch (e) {
+      errors.push(e && e.message ? e.message : String(e));
+      break;
+    }
+  }
+
+  return { code: text, evalCount, errors };
+}
+
+function instantiatePlaceholders(code, quizObj) {
+  if (typeof code !== 'string') {
+    return {
+      code,
+      mapping: {},
+      range: null,
+      evalCount: 0,
+      hasParamToken: false,
+      errors: [],
+    };
+  }
+
+  // Find ${NAME} placeholders and legacy _Param token.
+  const placeholderRe = /\$\{([A-Za-z0-9_]+)\}/g;
   const names = new Set();
   let m;
-  while ((m = re.exec(code)) !== null) {
+  while ((m = placeholderRe.exec(code)) !== null) {
     if (m[1]) names.add(m[1]);
   }
-  if (names.size === 0) return { code, mapping: {}, range: null };
+  const hasParamToken = /\b_Param\b/.test(code);
+  const hasEvalToken = code.includes('_eval(');
+
+  if (names.size === 0 && !hasParamToken && !hasEvalToken) {
+    return {
+      code,
+      mapping: {},
+      range: null,
+      evalCount: 0,
+      hasParamToken: false,
+      errors: [],
+    };
+  }
 
   // Range comes from MinVar/MaxVar in backend JSON.
   // If absent/invalid, fall back to a safe default.
@@ -93,16 +175,82 @@ function instantiatePlaceholders(code, quizObj) {
 
   const mapping = {};
   for (const name of names) {
-    const value = Math.floor(Math.random() * (max - min + 1)) + min;
+    const value = pickRandomInt(min, max);
     mapping[name] = value;
   }
+  if (hasParamToken) {
+    mapping._Param = pickRandomInt(min, max);
+  }
 
-  const instantiated = code.replace(/\$\{([A-Za-z0-9_]+)\}/g, (_full, name) => {
+  let instantiated = code.replace(/\$\{([A-Za-z0-9_]+)\}/g, (_full, name) => {
     if (Object.prototype.hasOwnProperty.call(mapping, name)) return String(mapping[name]);
     return _full;
   });
 
-  return { code: instantiated, mapping, range: { min, max } };
+  if (hasParamToken) {
+    instantiated = instantiated.replace(/\b_Param\b/g, String(mapping._Param));
+  }
+
+  const evalResult = replaceEvalExpressions(instantiated);
+
+  return {
+    code: evalResult.code,
+    mapping,
+    range: { min, max },
+    evalCount: evalResult.evalCount,
+    hasParamToken,
+    errors: evalResult.errors,
+  };
+}
+
+function normalizeRole(value) {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim().toLowerCase();
+  return trimmed || null;
+}
+
+function shouldInstantiateFetchedQuizPlaceholders(options) {
+  const resolved = options && typeof options === 'object' ? options : {};
+  if (resolved.forceKeepPlaceholders === true) return false;
+  if (resolved.forceInstantiate === true) return true;
+
+  const role = normalizeRole(resolved.role);
+  if (role === 'admin' || role === 'superuser') return false;
+  if (role === 'user') return true;
+
+  if (typeof resolved.defaultValue === 'boolean') return resolved.defaultValue;
+  return true;
+}
+
+function extractQuizData(parsed) {
+  const contentArr = (parsed && parsed.content && Array.isArray(parsed.content)) ? parsed.content : null;
+  if (contentArr && contentArr.length > 0) {
+    const quizObj = contentArr[0];
+    if (quizObj && quizObj.code) {
+      let codeStr = null;
+      if (typeof quizObj.code === 'string') codeStr = quizObj.code;
+      else if (typeof quizObj.code === 'object' && quizObj.code.toString) codeStr = quizObj.code.toString();
+      if (typeof codeStr === 'string') {
+        return { quizObj, code: codeStr };
+      }
+    }
+    return { quizObj, code: null };
+  }
+
+  if (parsed && (parsed.quizId || parsed.code || parsed.rdfId)) {
+    const quizObj = parsed;
+    if (quizObj.code) {
+      let codeStr = null;
+      if (typeof quizObj.code === 'string') codeStr = quizObj.code;
+      else if (typeof quizObj.code === 'object' && quizObj.code.toString) codeStr = quizObj.code.toString();
+      if (typeof codeStr === 'string') {
+        return { quizObj, code: codeStr };
+      }
+    }
+    return { quizObj, code: null };
+  }
+
+  return null;
 }
 
 function httpRequest(method, urlStr, postData, headers, maxRedirects = 5, cookieJar = {}) {
@@ -170,7 +318,7 @@ function httpRequest(method, urlStr, postData, headers, maxRedirects = 5, cookie
  * Reads auth and base URL from environment if not provided.
  * Returns the code string on success, or null on failure.
  */
-async function tryFetchQuizCode(quizId, baseUrl, options) {
+async function tryFetchQuizData(quizId, baseUrl, options) {
   if (!quizId) return null;
   setLastFetchQuizDiagnostic({
     kind: 'start',
@@ -354,63 +502,20 @@ async function tryFetchQuizCode(quizId, baseUrl, options) {
       return null;
     }
 
-    // support different response shapes: prefer parsed.content array
-    const contentArr = (parsed && parsed.content && Array.isArray(parsed.content)) ? parsed.content : null;
-    if (contentArr && contentArr.length>0) {
-      const quizObj = contentArr[0];
-      // accept code whether string or object with toString
-      if (quizObj && quizObj.code) {
-        let codeStr = null;
-        if (typeof quizObj.code === 'string') codeStr = quizObj.code;
-        else if (typeof quizObj.code === 'object' && quizObj.code.toString) codeStr = quizObj.code.toString();
-        if (typeof codeStr === 'string') {
-          const inst = instantiatePlaceholders(codeStr, quizObj);
-          if (inst && inst.range) {
-            console.info('[jstracing][fetch_quiz] INFO: instantiated placeholders', {
-              range: inst.range,
-              placeholders: Object.keys(inst.mapping || {}),
-              mapping: inst.mapping,
-            });
-          }
-          setLastFetchQuizDiagnostic({
-            kind: 'success',
-            quizId: String(quizId),
-            statusCode: quizRes.statusCode || null,
-            contentType: quizResContentType || null
-          });
-          return inst.code;
-        }
-      }
-      // no code found but content present
-      console.info('[jstracing][fetch_quiz] INFO: content found but no code property for quizId', quizId);
-      return null;
+    const quizData = extractQuizData(parsed);
+    if (quizData && typeof quizData.code === 'string') {
+      setLastFetchQuizDiagnostic({
+        kind: 'success',
+        quizId: String(quizId),
+        statusCode: quizRes.statusCode || null,
+        contentType: quizResContentType || null
+      });
+      return quizData;
     }
 
-    // Some endpoints may return the quiz object directly (not wrapped in content)
-    if (parsed && (parsed.quizId || parsed.code || parsed.rdfId)) {
-      const quizObj = parsed;
-      if (quizObj.code) {
-        let codeStr = null;
-        if (typeof quizObj.code === 'string') codeStr = quizObj.code;
-        else if (typeof quizObj.code === 'object' && quizObj.code.toString) codeStr = quizObj.code.toString();
-        if (typeof codeStr === 'string') {
-          const inst = instantiatePlaceholders(codeStr, quizObj);
-          if (inst && inst.range) {
-            console.info('[jstracing][fetch_quiz] INFO: instantiated placeholders', {
-              range: inst.range,
-              placeholders: Object.keys(inst.mapping || {}),
-              mapping: inst.mapping,
-            });
-          }
-          setLastFetchQuizDiagnostic({
-            kind: 'success',
-            quizId: String(quizId),
-            statusCode: quizRes.statusCode || null,
-            contentType: quizResContentType || null
-          });
-          return inst.code;
-        }
-      }
+    if (quizData) {
+      console.info('[jstracing][fetch_quiz] INFO: content found but no code property for quizId', quizId);
+      return null;
     }
 
     // As a final fallback, log the parsed structure for debugging
@@ -434,4 +539,15 @@ async function tryFetchQuizCode(quizId, baseUrl, options) {
   }
 }
 
-module.exports = { tryFetchQuizCode, getLastFetchQuizDiagnostic };
+async function tryFetchQuizCode(quizId, baseUrl, options) {
+  const quizData = await tryFetchQuizData(quizId, baseUrl, options);
+  return quizData && typeof quizData.code === 'string' ? quizData.code : null;
+}
+
+module.exports = {
+  tryFetchQuizCode,
+  tryFetchQuizData,
+  instantiatePlaceholders,
+  shouldInstantiateFetchedQuizPlaceholders,
+  getLastFetchQuizDiagnostic,
+};

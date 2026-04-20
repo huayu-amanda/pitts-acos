@@ -1,6 +1,6 @@
 # QuizPet ACOS Python Tracing Local Docker Deployment Guide
 
-This document explains how to deploy and run `quizpet-acos-python-tracing` locally with Docker after cloning from GitHub.
+This document explains how to deploy and run `quizpet-acos` locally with Docker after cloning from GitHub.
 
 The process follows three key steps:
 1. Start core services with Docker Compose:
@@ -50,23 +50,26 @@ Versions defined in Docker/Compose files:
 ## 2. Clone the Repository
 
 ```bash
-git clone <your-repo-url> quizpet-acos-python-tracing
-cd quizpet-acos-python-tracing
+git clone <your-repo-url> quizpet-acos
+cd quizpet-acos
 ```
 
 ## 3. Start Core Services (MySQL/Tomcat/ACOS)
 
 The deployment file used by this project is `deploy/ec2/docker-compose.yml`.
 
+**Important:** This stack requires environment variables to be injected from `env/local.env`. Always include `--env-file ./env/local.env` when starting the stack:
+
 ```bash
 cd deploy/ec2
-docker compose up -d --build --remove-orphans
+docker compose --env-file ./env/local.env up -d --build --remove-orphans
 ```
 
 Notes:
 - `acos-server` is built from `../../acos-server/Dockerfile`.
 - MySQL is mapped to host `127.0.0.1:3306`.
 - ACOS is mapped to host port `3000`.
+- Environment variables (`QUIZPET_USERNAME_ADMIN`, `QUIZPET_PASSWORD_ADMIN`, etc.) are loaded from `env/local.env` and injected into the `acos-server` container. Without `--env-file`, these vars will be empty and quiz/generator operations will fail.
 
 ## 4. Database Initialization (Create Schema, Then Import Seed Data)
 
@@ -80,7 +83,7 @@ Run from repository root:
 # quizpet-mysql database :
 # user/password: root/rootpassword
 
-cd /quizpet-acos-python-tracing
+cd /quizpet-acos
 docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/init-db.sql
 ```
 
@@ -90,18 +93,35 @@ docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/in
 Import in the following order (recommended):
 
 ```bash
-cd /quizpet-acos-python-tracing
+cd /quizpet-acos
 
-docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/insert-sample-ent_jquestion-topics.sql
-docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/insert-sample-ent_jquizes.sql
+# Keep login available
+docker exec quizpet-mysql mariadb -uroot -prootpassword -e "USE quizpet; TRUNCATE TABLE ent_user;"
+docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/ent_user_202604132302.sql
 docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/insert-sample-ent_user-testuser.sql
-docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/insert-sample-rel_question_quiz-topics.sql
-docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/insert-sample-rel_question_quiz-quizes.sql
+
+# Reproducible ID layout for quiz/topic:
+# 1) dump data uses AUTO_INCREMENT from 1
+# 2) sample data keeps fixed IDs range (900+)
+docker exec quizpet-mysql mariadb -uroot -prootpassword -e "USE quizpet; TRUNCATE TABLE ent_jquestion; ALTER TABLE ent_jquestion AUTO_INCREMENT=1;"
+docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/ent_jquestion_202604132255.sql
+docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/insert-sample-ent_jquestion.sql
+
+docker exec quizpet-mysql mariadb -uroot -prootpassword -e "USE quizpet; TRUNCATE TABLE ent_jquiz; ALTER TABLE ent_jquiz AUTO_INCREMENT=1;"
+docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/ent_jquiz_202604132255.sql
+docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/insert-sample-ent_jquizes.sql
+
+# Data patch: fill missing rdfIdDisplay for imported ent_jquiz rows
+docker exec quizpet-mysql mariadb -uroot -prootpassword -e "USE quizpet; UPDATE ent_jquiz SET rdfIdDisplay = 'q_java' WHERE QuizID BETWEEN 1 AND 255 AND (rdfIdDisplay IS NULL OR TRIM(rdfIdDisplay) = '');"
+
+docker exec quizpet-mysql mariadb -uroot -prootpassword -e "USE quizpet; TRUNCATE TABLE rel_question_quiz;"
+docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/rel_question_quiz_202604132255.sql
+docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/src/main/resources/db/insert-sample-rel_question_quiz.sql
 ```
 
 Notes:
-- `insert-sample-ent_jquiz(bak).sql` is a backup/reference script and is usually not required.
-- These scripts use `USE webex21;`, so keep the import order aligned with schema dependencies.
+- The sample scripts now use `USE quizpet;`.
+- Not all legacy dump SQL files are directly compatible with the current schema; validate each file before importing.
 
 ## 5. Access and Validation
 
@@ -132,7 +152,7 @@ After changing `acos-server` or related code, use:
 
 ```bash
 cd deploy/ec2
-docker compose up -d --build --remove-orphans
+docker compose --env-file ./env/local.env up -d --build --remove-orphans
 ```
 
 Usually you do not need `down` first. Use it only when you need a full reset of network/container state:

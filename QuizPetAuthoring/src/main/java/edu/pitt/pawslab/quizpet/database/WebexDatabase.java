@@ -121,6 +121,25 @@ public class WebexDatabase extends JdbcDaoSupport {
 		// deterministic topicId selected by ORDER BY ... LIMIT 1 above.
 		return topicIds.isEmpty() ? null : topicIds.get(0);
 	}
+
+	public StringBuilder getQuestionDomainByQuiz(Integer quizId){
+		// Load language domain from ent_jquestion linked by rel_question_quiz for quiz load API.
+		final String sql =
+				"SELECT `ent_jquestion`.`domain` FROM `" + Setting.DBNAME + "`.`rel_question_quiz` " +
+				"INNER JOIN `" + Setting.DBNAME + "`.`ent_jquestion` ON `rel_question_quiz`.`QuestionID` = `ent_jquestion`.`QuestionID` " +
+				"WHERE `rel_question_quiz`.`QuizID` = ? ORDER BY `rel_question_quiz`.`QuestionID` ASC LIMIT 1";
+		ArrayList<StringBuilder> domains = (ArrayList<StringBuilder>) getJdbcTemplate().query(
+				sql,
+				new Object[]{quizId},
+				new RowMapper<StringBuilder>() {
+					@Override
+					public StringBuilder mapRow(ResultSet rs, int rowNum) throws SQLException {
+						return new StringBuilder(rs.getString(1));
+					}
+				});
+
+		return domains.isEmpty() ? null : domains.get(0);
+	}
 	
 	public Integer createQuizTopicRelation(Integer quizId, Integer topicId){
 		final String sql = "INSERT INTO `" + Setting.DBNAME + "`.`rel_question_quiz` (`QuizID`, `QuestionID`) VALUES (?, ?)";
@@ -220,7 +239,7 @@ public class WebexDatabase extends JdbcDaoSupport {
 	}
 	
 	public Topic newTopic(final Topic newTopic){
-		final String sql = "INSERT INTO `webex21`.`ent_jquestion` ( `AuthorID`, `GroupID`, `Title`, `Description`, `Privacy`, `domain`) "
+		final String sql = "INSERT INTO `" + Setting.DBNAME + "`.`ent_jquestion` ( `AuthorID`, `GroupID`, `Title`, `Description`, `Privacy`, `domain`) "
 				+ "VALUES (?, ?, ?, ?, ?, ?)";
 		
 		KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -440,7 +459,7 @@ public class WebexDatabase extends JdbcDaoSupport {
 		//set timeStamp
 		quiz.setTimestamp(System.currentTimeMillis() / 1000);
 		
-		final String sql = "UPDATE `webex21`.`ent_jquiz` SET `Title` = ?, `Description` = ?, `Privacy` = ?, `timestamp` = ? WHERE `QuizID` = ?";
+		final String sql = "UPDATE `" + Setting.DBNAME + "`.`ent_jquiz` SET `Title` = ?, `Description` = ?, `Privacy` = ?, `timestamp` = ? WHERE `QuizID` = ?";
 		return getJdbcTemplate().update(
 				sql,
 				new Object[]{

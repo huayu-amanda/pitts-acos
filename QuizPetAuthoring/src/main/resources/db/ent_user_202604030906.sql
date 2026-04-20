@@ -1,0 +1,65 @@
+INSERT INTO ent_user (name) VALUES
+	 ('Deleted Users'),
+	 ('Sergey Sosnovsky'),
+	 ('Peter Brusilovsky'),
+	 ('Ken Moore'),
+	 ('Sharon Hsiao'),
+	 ('Jim'),
+	 ('Michael'),
+	 ('Natalya'),
+	 ('Divyasheel'),
+	 ('Banks Christopher');
+INSERT INTO ent_user (name) VALUES
+	 ('Cross Patrick'),
+	 ('Detar Derek'),
+	 ('Dobosh Joshua'),
+	 ('Gentile Jeffrey'),
+	 ('Kerns Troy'),
+	 ('Kitchens Kenyetta'),
+	 ('Laney Jesse'),
+	 ('Ott Matthew'),
+	 ('Straughters Jamal'),
+	 ('Danielle');
+INSERT INTO ent_user (name) VALUES
+	 ('James Bowman'),
+	 ('Patric Campbell'),
+	 ('Stephen Plumby'),
+	 ('Eric Riemer'),
+	 ('Darby Hoffman'),
+	 ('Chris Jackson'),
+	 ('John Moan'),
+	 ('Ryan Johnston'),
+	 ('Michael Logoyda'),
+	 ('Eric Napolitan');
+INSERT INTO ent_user (name) VALUES
+	 ('Andres Pacheco'),
+	 ('David Nawn'),
+	 ('Megan Patton'),
+	 ('Joshua Sawyers'),
+	 ('Alex Simeone'),
+	 ('Annette Rico'),
+	 ('Andrzej Dubiel'),
+	 ('Aslam Mogri'),
+	 ('Andrew Mowrey'),
+	 ('Larry Werner');
+INSERT INTO ent_user (name) VALUES
+	 ('Kieth Yackovich'),
+	 ('Angela Zack'),
+	 ('Julio Guerra'),
+	 ('Yun Huang'),
+	 ('Roya Hosseini'),
+	 ('t											'),
+	 ('Barbara Sabitzer'),
+	 ('Teemu SirkiÃ¤				'),
+	 ('guest'),
+	 ('Artem Beaty');
+INSERT INTO ent_user (name) VALUES
+	 ('Sherry Sahebi'),
+	 ('adl01'),
+	 ('Kamil Akhuseyinoglu'),
+	 ('Michelle Wang'),
+	 ('Yana Kortsarts'),
+	 ('Arun Lekshmi Narayanan'),
+	 ('Jordan Barria-Pineda'),
+	 ('Mohammad Hassany'),
+	 ('Aditya Joshi');

@@ -2,14 +2,12 @@
 import sys
 import json
 import ast
-from typing import Dict, Any
 
 
-def preprocess_code(raw_code: str, params: Dict[str, Any]) -> str:
+def preprocess_code(raw_code: str) -> str:
     """
     预处理代码：
     1. 去掉首尾的三引号（无论是三重双引号还是三重单引号）
-    2. 使用 params 把 ${X}, ${Y}, ${OFFSET} 这类占位符替换成实际值
     """
     if raw_code is None:
         return ""
@@ -23,12 +21,6 @@ def preprocess_code(raw_code: str, params: Dict[str, Any]) -> str:
         # 去掉开头多余的换行
         while text.startswith("\n") or text.startswith("\r\n"):
             text = text[1:]
-
-    # 简单的占位符替换：${KEY} -> str(value)
-    if params:
-        for key, value in params.items():
-            placeholder = "${" + str(key) + "}"
-            text = text.replace(placeholder, str(value))
 
     return text
 
@@ -72,7 +64,7 @@ def ast_to_concept_tree(code: str, filename: str = "") -> dict:
 
 
 def main():
-    # 从 stdin 读取 Java 传过来的 JSON：{"code": "...", "params": {...}, "filename": "..."}
+    # 从 stdin 读取 Java 传过来的 JSON：{"code": "...", "filename": "..."}
     raw = sys.stdin.read()
     try:
         data = json.loads(raw)
@@ -82,12 +74,11 @@ def main():
         sys.exit(1)
 
     code_raw = data.get("code", "")
-    params = data.get("params", {}) or {}
     filename = data.get("filename", "Tester.py")
 
     try:
-        # 预处理：去三引号 + 占位符替换
-        preprocessed_code = preprocess_code(code_raw, params)
+        # 预处理：仅去三引号，不做参数/占位符替换
+        preprocessed_code = preprocess_code(code_raw)
 
         # debug 输出全部走 stderr（不会影响 stdout 的 JSON）
         print("[PY_DEBUG] filename =", filename, file=sys.stderr, flush=True)

@@ -187,6 +187,13 @@ const JSTracing = {
         }
       }
 
+      // Always render from imported exercise code and fresh parameter instantiation.
+      // Persisted session state must not override current exercise source.
+      sessionData.code = "";
+      sessionData.answer = "";
+      sessionData.expectedResult = "";
+      sessionData.verdict = "";
+
       // 3. Read the frontend HTML template
       //    Assumed to be at jstracing/frontend/index.html
       const frontendDir = path.join(__dirname, "frontend");
@@ -203,72 +210,33 @@ const JSTracing = {
 
       let html = fs.readFileSync(htmlPath, "utf8");
 
-      // 4. Optionally fetch dynamic quiz code from QuizPetAuthoring
-      //    If exerciseData contains `quizId` or an env var QUIZ_ID_<EXERCISE> is set,
-      //    try to GET /quiz/id/{quizId} from QUIZPET_BASE_URL and substitute `code`.
-      const QUIZPET_BASE_URL = process.env.QUIZPET_BASE_URL || "http://host.docker.internal:8080/quizpet";
-      const exerciseEnvQuizId = process.env[`QUIZ_ID_${exerciseName.toUpperCase()}`];
-      const quizId = (exerciseData && exerciseData.quizId) ? exerciseData.quizId : (exerciseEnvQuizId || null);
-
-      // Use helper module to perform fetch/login and return code string or null
-      // Add detailed logs to help debugging connectivity and fetch flow
-      console.info('[jstracing] INFO: preparing to fetch dynamic quiz code');
-      console.info('[jstracing] INFO: QUIZPET_BASE_URL=', QUIZPET_BASE_URL);
-      console.info('[jstracing] INFO: resolved quizId=', quizId);
-      console.info('[jstracing] INFO: process.env.QUIZPET_USERNAME present=', !!process.env.QUIZPET_USERNAME);
-
-      const dynamicCodePromise = (async () => {
-        try {
-          if (!quizId) {
-            console.info('[jstracing] INFO: no quizId provided; skipping dynamic fetch');
-            return null;
-          }
-          console.info('[jstracing] INFO: attempting fetch for quizId', quizId);
-          const code = await fetchQuizHelper.tryFetchQuizCode(quizId, QUIZPET_BASE_URL);
-          if (code) {
-            console.info('[jstracing] INFO: fetched dynamic quiz code for quizId', quizId, 'length=', code.length);
-            return code;
-          } else {
-            console.info('[jstracing] INFO: fetch completed but returned no code for quizId', quizId);
-          }
-        } catch (e) {
-          console.warn('[jstracing] WARN: fetch helper error for quizId', quizId, e && e.message ? e.message : e);
-        }
-        return null;
-      })();
-      // 4. Insert the JSON into the template
-      //    The template should have a {{EXERCISE_JSON}} placeholder
+      // 4. Use imported/static jstracing content as source code, then instantiate placeholders for student view.
       const exerciseJsonStringify = async () => {
         try {
-          const dynamicCode = await dynamicCodePromise;
-          if (dynamicCode) {
-            console.info('[jstracing] INFO: applying dynamic code to exerciseData');
-            exerciseData.code = dynamicCode;
+          if (exerciseData && typeof exerciseData.code === 'string') {
+            let quizMetaForRange = exerciseData;
+            const quizId = (exerciseData && exerciseData.quizId) ? exerciseData.quizId : null;
 
-            // Frontend prefers session.code over exerciseData.code.
-            // To ensure the editor shows the fetched backend code by default, we override the
-            // injected session payload for this render unless explicitly configured otherwise.
-            // This does NOT delete the session file on disk.
-            const preferSession = /^(1|true|yes)$/i.test(process.env.JSTRACING_PREFER_SESSION || '');
-            if (!preferSession) {
-              if (sessionData && typeof sessionData === 'object') {
-                if (sessionData.code) {
-                  console.info('[jstracing] INFO: overriding injected session.code with dynamic exercise code (set JSTRACING_PREFER_SESSION=true to keep session)');
+            // Keep code source from imported jstracing JSON; fetch metadata only for MinVar/MaxVar range.
+            if (quizId) {
+              try {
+                const QUIZPET_BASE_URL = process.env.QUIZPET_BASE_URL || "http://host.docker.internal:8080/quizpet";
+                const fetched = await fetchQuizHelper.tryFetchQuizData(quizId, QUIZPET_BASE_URL);
+                if (fetched && fetched.quizObj) {
+                  quizMetaForRange = fetched.quizObj;
                 }
-                sessionData.code = "";
-                sessionData.answer = "";
-                sessionData.expectedResult = "";
-                sessionData.verdict = "";
+              } catch (_metaErr) {
+                // Ignore metadata fetch errors; instantiatePlaceholders has safe fallback range.
               }
-            } else {
-              console.info('[jstracing] INFO: keeping injected session.code (JSTRACING_PREFER_SESSION=true)');
             }
-          } else {
-            console.info('[jstracing] INFO: no dynamic code applied; using static exerciseData');
+
+            const inst = fetchQuizHelper.instantiatePlaceholders(exerciseData.code, quizMetaForRange);
+            if (inst && typeof inst.code === 'string') {
+              exerciseData.code = inst.code;
+            }
           }
         } catch (e) {
-          console.warn('[jstracing] WARN: error while awaiting dynamic code promise:', e && e.message ? e.message : e);
-          // ignore
+          console.warn('[jstracing] WARN: placeholder instantiation failed:', e && e.message ? e.message : e);
         }
         return JSON.stringify(exerciseData);
       };

@@ -6,12 +6,12 @@
 -- Quiz 4: stack + if/else topic sample
 -- Run with: docker exec -i quizpet-mysql mariadb -uroot -prootpassword < insert-sample-ent_jquizes.sql
 
-USE webex21;
+USE quizpet;
 
 INSERT INTO `ent_jquiz` (
   `QuizID`, `AuthorID`, `GroupID`, `Title`, `Description`, `Code`, `MinVar`, `MaxVar`, `AnsType`, `Privacy`, `rdfID`, `QuesType`, `timestamp`, `rdfIdDisplay`, `version`
 ) VALUES (
-  1,
+  900,
   1,
   1,
   'q_py_sample',
@@ -46,42 +46,7 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO `ent_jquiz` (
   `QuizID`, `AuthorID`, `GroupID`, `Title`, `Description`, `Code`, `MinVar`, `MaxVar`, `AnsType`, `Privacy`, `rdfID`, `QuesType`, `timestamp`, `rdfIdDisplay`, `version`
 ) VALUES (
-  4,
-  1,
-  1,
-  'q_py_stack_if_result',
-  'Stack + if/else practice with random threshold. Task: Write the final value of result.',
-  '# stack_if_result.py\nfrom stack import Stack\ns = Stack()\ns.push(10)\ns.push(20)\ns.push(30)\n\nif s.peek() > ${THRESHOLD}:\n    s.pop()\nelse:\n    s.push(99)\n\nresult = s.peek()\nprint(result)\n',
-  25,
-  55,
-  1,
-  0,
-  'q_py_stack_if_result_',
-  1,
-  1769487112,
-  'q_py_stack_if_result',
-  1
-)
-ON DUPLICATE KEY UPDATE
-  `AuthorID` = VALUES(`AuthorID`),
-  `GroupID` = VALUES(`GroupID`),
-  `Title` = VALUES(`Title`),
-  `Description` = VALUES(`Description`),
-  `Code` = VALUES(`Code`),
-  `MinVar` = VALUES(`MinVar`),
-  `MaxVar` = VALUES(`MaxVar`),
-  `AnsType` = VALUES(`AnsType`),
-  `Privacy` = VALUES(`Privacy`),
-  `rdfID` = VALUES(`rdfID`),
-  `QuesType` = VALUES(`QuesType`),
-  `timestamp` = VALUES(`timestamp`),
-  `rdfIdDisplay` = VALUES(`rdfIdDisplay`),
-  `version` = VALUES(`version`);
-
-INSERT INTO `ent_jquiz` (
-  `QuizID`, `AuthorID`, `GroupID`, `Title`, `Description`, `Code`, `MinVar`, `MaxVar`, `AnsType`, `Privacy`, `rdfID`, `QuesType`, `timestamp`, `rdfIdDisplay`, `version`
-) VALUES (
-  2,
+  901,
   1,
   1,
   'q_py_if_branch',
@@ -116,7 +81,7 @@ ON DUPLICATE KEY UPDATE
 INSERT INTO `ent_jquiz` (
   `QuizID`, `AuthorID`, `GroupID`, `Title`, `Description`, `Code`, `MinVar`, `MaxVar`, `AnsType`, `Privacy`, `rdfID`, `QuesType`, `timestamp`, `rdfIdDisplay`, `version`
 ) VALUES (
-  3,
+  902,
   1,
   1,
   'q_py_loop_sum',
@@ -130,6 +95,41 @@ INSERT INTO `ent_jquiz` (
   1,
   1769487111,
   'q_py_loop_sum',
+  1
+)
+ON DUPLICATE KEY UPDATE
+  `AuthorID` = VALUES(`AuthorID`),
+  `GroupID` = VALUES(`GroupID`),
+  `Title` = VALUES(`Title`),
+  `Description` = VALUES(`Description`),
+  `Code` = VALUES(`Code`),
+  `MinVar` = VALUES(`MinVar`),
+  `MaxVar` = VALUES(`MaxVar`),
+  `AnsType` = VALUES(`AnsType`),
+  `Privacy` = VALUES(`Privacy`),
+  `rdfID` = VALUES(`rdfID`),
+  `QuesType` = VALUES(`QuesType`),
+  `timestamp` = VALUES(`timestamp`),
+  `rdfIdDisplay` = VALUES(`rdfIdDisplay`),
+  `version` = VALUES(`version`);
+
+INSERT INTO `ent_jquiz` (
+  `QuizID`, `AuthorID`, `GroupID`, `Title`, `Description`, `Code`, `MinVar`, `MaxVar`, `AnsType`, `Privacy`, `rdfID`, `QuesType`, `timestamp`, `rdfIdDisplay`, `version`
+) VALUES (
+  903,
+  1,
+  1,
+  'q_py_stack_if_result',
+  'Stack + if/else practice with random threshold. Task: Write the final value of result.',
+  '# stack_if_result.py\nfrom stack import Stack\ns = Stack()\ns.push(10)\ns.push(20)\ns.push(30)\n\nif s.peek() > ${THRESHOLD}:\n    s.pop()\nelse:\n    s.push(99)\n\nresult = s.peek()\nprint(result)\n',
+  25,
+  55,
+  1,
+  0,
+  'q_py_stack_if_result_',
+  1,
+  1769487112,
+  'q_py_stack_if_result',
   1
 )
 ON DUPLICATE KEY UPDATE

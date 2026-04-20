@@ -16,6 +16,7 @@ const main = () => {
   const pairs = [
     [path.join(srcDir, "jstracing.js"), path.join(outDir, "jstracing.js")],
     [path.join(srcDir, "jstracing.css"), path.join(outDir, "jstracing.css")],
+    [path.join(srcDir, "runtime-config.js"), path.join(outDir, "runtime-config.js")],
   ];
 
   for (const [from, to] of pairs) {

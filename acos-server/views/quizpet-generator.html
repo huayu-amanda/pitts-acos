@@ -4,15 +4,15 @@
 <!-- BEGIN quizpet-generator page -->
 <h2>quizpet-generator</h2>
 <p>Select topic and quiz, load by Quiz ID textbox, then convert and import into JSTracing content package.</p>
-<p><strong>Target:</strong> content type <code>jstracing</code>, content package <code>{{ sourceContentPackage | default('jstracing-python') }}</code></p>
-<p><strong>Source:</strong> {{ sourceLabel | default('Using local QuizPetAuthoring_Python') }} (route: {{ routeBase | default('/quizpet-generator') }})</p>
+<p><strong>Target:</strong> content type: <code>jstracing</code>, content package: <code>jstracing-python</code>, <code>jstracing-java</code></p>
+<p><strong>Source:</strong> {{ sourceLabel | default('Using local QuizPetAuthoring') }} (route: {{ routeBase | default('/quizpet-generator') }})</p>
 <div class="row" style="margin-bottom: 10px;">
   <div class="col-md-12">
     {% if routeBase == '/quizpet-generator' %}
-      <span class="btn btn-primary btn-sm" style="cursor: default;">Using local QuizPetAuthoring_Python</span>
+      <span class="btn btn-primary btn-sm" style="cursor: default;">Using local QuizPetAuthoring</span>
       <a class="btn btn-default btn-sm" href="/quizpet-generator-pitts" style="margin-left: 8px;">Using adapt2-pitt QuizPetAuthoring_Java</a>
     {% else %}
-      <a class="btn btn-default btn-sm" href="/quizpet-generator">Using local QuizPetAuthoring_Python</a>
+      <a class="btn btn-default btn-sm" href="/quizpet-generator">Using local QuizPetAuthoring</a>
       <span class="btn btn-primary btn-sm" style="cursor: default; margin-left: 8px;">Using adapt2-pitt QuizPetAuthoring_Java</span>
     {% endif %}
   </div>
@@ -84,18 +84,18 @@
 
     <div class="row" style="margin-top: 12px;">
       <div class="col-md-12">
-        <label for="codeInput" id="codeInputLabel">Python code</label>
+        <label for="codeInput" id="codeInputLabel">Code</label>
         <textarea id="codeInput" class="form-control" rows="18" style="font-family: Menlo, Monaco, Consolas, monospace; overflow: auto; resize: vertical;"></textarea>
       </div>
     </div>
 
     <div class="row" style="margin-top: 12px;">
       <div class="col-md-4">
-        <label for="supportFilePickerInput" id="supportFilePickerLabel">Or choose support .py file</label>
+        <label for="supportFilePickerInput" id="supportFilePickerLabel">Or choose support .py .java file</label>
         <input id="supportFilePickerInput" class="form-control" type="file" accept=".py,.java,text/x-python,text/x-java-source,text/plain" />
       </div>
       <div class="col-md-8">
-        <label for="supportFileContentInput" id="supportFileContentLabel">Support file content (optional)</label>
+        <label for="supportFileContentInput" id="supportFileContentLabel">Support file content</label>
         <textarea id="supportFileContentInput" class="form-control" rows="6" style="font-family: Menlo, Monaco, Consolas, monospace;" placeholder="Paste stack.py content here when code uses: from stack import Stack"></textarea>
       </div>
     </div>
@@ -115,6 +115,9 @@
     <div class="row" style="margin-top: 12px;">
       <div class="col-md-3">
         <button id="importBtn" class="btn btn-success btn-block" type="button">Import to jstracing-python</button>
+      </div>
+      <div class="col-md-3">
+        <button id="importJavaBtn" class="btn btn-info btn-block" type="button">Import to jstracing-java</button>
       </div>
     </div>
 
@@ -163,11 +166,21 @@
   var selectedSupportFileName = sourceLanguage === 'java' ? 'Stack.java' : 'stack.py';
 
   var importBtn = byId('importBtn');
+  var importJavaBtn = byId('importJavaBtn');
   var importStatus = byId('importStatus');
 
   function normalizeLanguage(value) {
     var v = String(value || '').trim().toLowerCase();
-    return v === 'java' ? 'java' : 'python';
+    if (!v) {
+      return 'python';
+    }
+    if (v === 'java' || /^q_?java$/.test(v) || v.indexOf('java') !== -1) {
+      return 'java';
+    }
+    if (v === 'python' || v === 'py' || /^q_?py(thon)?$/.test(v) || v.indexOf('python') !== -1) {
+      return 'python';
+    }
+    return 'python';
   }
 
   function normalizeSupportFileName(rawName, language) {
@@ -345,16 +358,15 @@
   function applyLanguageUI(language) {
     var lang = normalizeLanguage(language);
     sourceLanguage = lang;
+    updateImportButtons(lang);
     if (codeInputLabel) {
-      codeInputLabel.textContent = lang === 'java' ? 'Java code' : 'Python code';
+      codeInputLabel.textContent = 'Code';
     }
     if (supportFilePickerLabel) {
-      supportFilePickerLabel.textContent = lang === 'java'
-        ? 'Or choose support .java file'
-        : 'Or choose support .py file';
+      supportFilePickerLabel.textContent = 'Or choose support .py .java file';
     }
     if (supportFileContentLabel) {
-      supportFileContentLabel.textContent = 'Support file content (optional, ' + lang + ')';
+      supportFileContentLabel.textContent = 'Support file content';
     }
     if (supportFileContentInput && !supportFileContentInput.value.trim()) {
       supportFileContentInput.placeholder = lang === 'java'
@@ -363,6 +375,16 @@
     }
     if (!selectedSupportFileName || selectedSupportFileName === 'stack.py' || selectedSupportFileName === 'Stack.java') {
       selectedSupportFileName = lang === 'java' ? 'Stack.java' : 'stack.py';
+    }
+  }
+
+  function updateImportButtons(language) {
+    var lang = normalizeLanguage(language);
+    if (importBtn) {
+      importBtn.disabled = lang !== 'python';
+    }
+    if (importJavaBtn) {
+      importJavaBtn.disabled = lang !== 'java';
     }
   }
 
@@ -497,7 +519,7 @@
 
   async function fillForm(quiz) {
     if (!quiz) return;
-    var lang = normalizeLanguage(quiz.language || sourceLanguage);
+    var lang = normalizeLanguage(quiz.domain || quiz.language || sourceLanguage);
     var titleFallback = quiz.codeHeaderFileName || extractCodeHeaderFileName(quiz.code) || ('Quiz ' + (quiz.quizId || ''));
     var cleanedTitle = cleanQuizTitle(quiz.title, titleFallback);
     applyLanguageUI(lang);
@@ -572,7 +594,9 @@
     }
   });
 
-  importBtn.addEventListener('click', async function() {
+  async function importToPackage(targetLanguage) {
+    var normalizedTargetLanguage = normalizeLanguage(targetLanguage || sourceLanguage);
+    var targetPackage = normalizedTargetLanguage === 'java' ? 'jstracing-java' : 'jstracing-python';
     var cleanedTitle = cleanQuizTitle(titleInput.value, 'quizpet_exercise');
     var body = {
       quizId: quizIdInput.value,
@@ -586,7 +610,7 @@
       code: codeInput.value
     };
     body.exerciseName = cleanedTitle;
-    body.language = normalizeLanguage(sourceLanguage);
+    body.language = normalizedTargetLanguage;
 
     var pickedSupportFile = supportFilePickerInput.files && supportFilePickerInput.files[0];
     var supportFileName = normalizeSupportFileName(
@@ -631,7 +655,7 @@
       return;
     }
 
-    setStatus(importStatus, 'alert-info', 'Importing...');
+    setStatus(importStatus, 'alert-info', 'Importing to ' + targetPackage + ' ...');
     try {
       var resp = await fetch(apiBase + '/api/import', {
         method: 'POST',
@@ -643,11 +667,19 @@
         throw new Error(data.error || 'Import failed.');
       }
 
-      var msg = 'Imported as ' + data.result.exerciseName + '. Open: ' + data.result.htmlUrl;
+      var msg = 'Imported to ' + targetPackage + ' as ' + data.result.exerciseName + '. Open: ' + data.result.htmlUrl;
       setStatus(importStatus, 'alert-success', msg);
     } catch (err) {
       setStatus(importStatus, 'alert-danger', 'Import error: ' + (err.message || err));
     }
+  }
+
+  importBtn.addEventListener('click', async function() {
+    await importToPackage('python');
+  });
+
+  importJavaBtn.addEventListener('click', async function() {
+    await importToPackage('java');
   });
 
   clearQuizIdOptions();

@@ -65,6 +65,9 @@ public class QuizService {
 
 				// 原来的逻辑：直接使用 rs，不做 null 检查
 				rs.setTopicId(webexDatabase.getTopicIdByQuiz(quizId));
+				// Also expose domain from ent_jquestion so downstream load-quiz consumers can
+				// choose the correct language package (java vs python) without guessing.
+				rs.setDomain(webexDatabase.getQuestionDomainByQuiz(quizId));
 				System.out.println("[QuizService.getQuizById] topic info loaded.");
 
 				serverMessage.setSuccess(true);

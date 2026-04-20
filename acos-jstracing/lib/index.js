@@ -2,6 +2,7 @@
 
 const path = require("path");
 const fs = require("fs");
+const express = require("express");
 
 // Import content type object (./jstracing/index.js)
 const JSTracing = require("./jstracing");
@@ -15,6 +16,25 @@ exports.packageType = "content-type";
 exports.namespace = "jstracing";
 
 exports.register = function (handlers, app, config) {
+  const bundledAppStaticDir = path.join(__dirname, "..", "app");
+  const workspaceJavaFiddleStaticDir = path.join(__dirname, "..", "..", "javafiddle-main", "static");
+  const appStaticDir = fs.existsSync(bundledAppStaticDir)
+    ? bundledAppStaticDir
+    : workspaceJavaFiddleStaticDir;
+  const toolsJarPath = path.join(appStaticDir, "tools.jar");
+
+  if (app && typeof app.use === "function" && fs.existsSync(appStaticDir)) {
+    app.use("/app", express.static(appStaticDir));
+    console.log("[acos-jstracing] INFO: serving CheerpJ app assets from", appStaticDir);
+  }
+
+  if (app && typeof app.get === "function" && fs.existsSync(toolsJarPath)) {
+    app.get("/tools.jar", (req, res) => {
+      res.sendFile(toolsJarPath);
+    });
+    console.log("[acos-jstracing] INFO: serving tools.jar from", toolsJarPath);
+  }
+
   // Save handlers for content type handleEvent usage
   JSTracing.handlers = handlers;
   // 1. Register content type: name "jstracing"
