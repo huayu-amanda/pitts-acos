@@ -273,6 +273,22 @@
   let pyodide = null;
   let pyodideReady = false;
 
+  const waitForLoadPyodide = (timeoutMs = 15000) => new Promise((resolve, reject) => {
+    const start = Date.now();
+    const tick = () => {
+      if (typeof window.loadPyodide === "function") {
+        resolve(window.loadPyodide);
+        return;
+      }
+      if (Date.now() - start >= timeoutMs) {
+        reject(new Error("loadPyodide is not available yet"));
+        return;
+      }
+      window.setTimeout(tick, 50);
+    };
+    tick();
+  });
+
   const setStatus = (text, variant) => {
     if (!statusEl) {
       return;
@@ -480,7 +496,8 @@
       return;
     }
     setStatus("Loading Pyodide...", "loading");
-    pyodide = await loadPyodide({
+    const loadPyodideFn = await waitForLoadPyodide();
+    pyodide = await loadPyodideFn({
       indexURL: String(runtimePyodide.indexURL || "https://cdn.jsdelivr.net/pyodide/v0.26.2/full/"),
     });
     pyodideReady = true;

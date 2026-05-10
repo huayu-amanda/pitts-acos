@@ -28,9 +28,9 @@ npm run dev
 - Default port: `3030` (override with environment variable `PORT`)
 - Open: `http://localhost:3030/`
 - Exercise page URL format is consistent with `acos-server`:
-  - `http://localhost:3030/html/jstracing/jstracing-python/point_above_below`
+  - `http://localhost:3030/html/jstracing/jstracing-python/sample_quiz`
 
-After running, `<exercise>.session.json` is generated/updated under `jstracing-python/` (for example, `point_above_below.session.json`).
+After running, `<exercise>.session.json` is generated/updated under `jstracing-python/` (for example, `sample_quiz.session.json`).
 
 ## Embed Into acos-server (As a Module)
 

@@ -2,13 +2,6 @@
 
 module.exports = [
   {
-    topicId: 100,
-    key: 'q_py_topic_expression_basics',
-    title: 'Expression Basics (sample quiz topic)',
-    sampleQuizzes: [],
-    hiddenQuizIds: [900]
-  },
-  {
     topicId: 101,
     key: 'q_py_topic_if_statement',
     title: 'If Statement',

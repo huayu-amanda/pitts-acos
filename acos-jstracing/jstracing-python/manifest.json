@@ -5,7 +5,7 @@
   "type": "jstracing",
   "files": [
     {
-      "name": "quiz_sample.json",
+      "name": "sample_quiz.json",
       "role": "exercise"
     }
   ]

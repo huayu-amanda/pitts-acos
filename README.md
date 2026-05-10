@@ -58,18 +58,18 @@ cd quizpet-acos
 
 The deployment file used by this project is `deploy/ec2/docker-compose.yml`.
 
-**Important:** This stack requires environment variables to be injected from `env/local.env`. Always include `--env-file ./env/local.env` when starting the stack:
+**Important:** This stack now uses `deploy/ec2/.env` as the default startup environment file, so `docker compose` will load it automatically:
 
 ```bash
 cd deploy/ec2
-docker compose --env-file ./env/local.env up -d --build --remove-orphans
+docker compose up -d --build --remove-orphans
 ```
 
 Notes:
 - `acos-server` is built from `../../acos-server/Dockerfile`.
 - MySQL is mapped to host `127.0.0.1:3306`.
 - ACOS is mapped to host port `3000`.
-- Environment variables (`QUIZPET_USERNAME_ADMIN`, `QUIZPET_PASSWORD_ADMIN`, etc.) are loaded from `env/local.env` and injected into the `acos-server` container. Without `--env-file`, these vars will be empty and quiz/generator operations will fail.
+- Environment variables (`QUIZPET_USERNAME_ADMIN`, `QUIZPET_PASSWORD_ADMIN`, etc.) are loaded from `deploy/ec2/.env` and injected into the `acos-server` container.
 
 ## 4. Database Initialization (Create Schema, Then Import Seed Data)
 
@@ -152,7 +152,7 @@ After changing `acos-server` or related code, use:
 
 ```bash
 cd deploy/ec2
-docker compose --env-file ./env/local.env up -d --build --remove-orphans
+docker compose up -d --build --remove-orphans
 ```
 
 Usually you do not need `down` first. Use it only when you need a full reset of network/container state:

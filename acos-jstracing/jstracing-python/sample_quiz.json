@@ -1,0 +1,16 @@
+{
+  "id": "sample_quiz",
+  "quizId": 1,
+  "topicId": 1,
+  "rdfId": "sample",
+  "title": "sample_quiz",
+  "description": "Simple runnable sample quiz for Python tracing",
+  "language": "python",
+  "code": "def compute(a, b):\n    return a * b + 1\n\nprint(compute(3, 4))\n",
+  "question": "What is the exact output of the program?",
+  "correct_answer": "13",
+  "feedback": {
+    "correct": "Correct! 3 * 4 + 1 = 13.",
+    "incorrect": "Not quite. Recalculate compute(3, 4)."
+  }
+}

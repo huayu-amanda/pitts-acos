@@ -13,14 +13,16 @@ services:
   #     - ./nginx.conf:/etc/nginx/conf.d/default.conf
 
   quizpet-mysql:
-    image: mariadb:10.5
+    build:
+      context: ../..
+      dockerfile: deploy/ec2/mariadb/Dockerfile
+    image: quizpet-mariadb:10.5-init
     container_name: quizpet-mysql
     restart: unless-stopped
     environment:
       MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
     volumes:
       - mysql-data:/var/lib/mysql
-      - ../../QuizPetAuthoring/init-db.sql:/docker-entrypoint-initdb.d/01-init-db.sql:ro
     # Keep DB off the public internet; use SSH/SSM port-forward when you need access.
     ports:
       - "127.0.0.1:3306:3306"
@@ -53,7 +55,7 @@ services:
       LTI_CONSUMER_KEY: ${LTI_CONSUMER_KEY:-acos}
       LTI_CONSUMER_SECRET: ${LTI_CONSUMER_SECRET:-acos}
       # Runtime-selectable QuizPet endpoint and credentials.
-      # Use: docker compose --env-file ./env/local.env up -d
+      # Default env file: deploy/ec2/.env
       QUIZPET_BASE_URL: ${QUIZPET_BASE_URL}
       QUIZPET_USERNAME: ${QUIZPET_USERNAME}
       QUIZPET_PASSWORD: ${QUIZPET_PASSWORD}

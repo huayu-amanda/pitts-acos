@@ -39,7 +39,7 @@
         </select>
       </div>
       <div id="quizIdInputCol" class="col-md-2">
-        <label for="quizIdInput">Quiz ID (used for Load)</label>
+        <label for="quizIdInput" style="white-space: nowrap;">Quiz ID (enter Quiz ID to load quiz)</label>
         <input id="quizIdInput" type="number" class="form-control" placeholder="e.g. 2" />
       </div>
       <div id="loadQuizBtnCol" class="col-md-2">
@@ -51,6 +51,14 @@
     <div class="row" style="margin-top: 12px;">
       <div class="col-md-12">
         <div id="loadStatus" class="alert alert-info" style="padding: 8px; margin-bottom: 0;">Status: Ready</div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top: 8px;">
+      <div class="col-md-12">
+        <small id="modeHint" style="display: block; color: #777; line-height: 1.4;">
+          Rule: Quiz ID >= 900 supports Topic + Quiz options + RDF mapping; Quiz ID < 900 uses Quiz-ID-only loading.
+        </small>
       </div>
     </div>
 
@@ -142,6 +150,7 @@
   var quizIdInput = byId('quizIdInput');
   var loadQuizBtn = byId('loadQuizBtn');
   var loadStatus = byId('loadStatus');
+  var modeHint = byId('modeHint');
   var quizIdOnlyToggleBtn = byId('quizIdOnlyToggleBtn');
   var topicCol = byId('topicCol');
   var topicIdCol = byId('topicIdCol');
@@ -149,6 +158,7 @@
   var quizIdInputCol = byId('quizIdInputCol');
   var loadQuizBtnCol = byId('loadQuizBtnCol');
   var quizIdOnlyMode = false;
+  var SAMPLE_QUIZ_ID_MIN = 900;
 
   var topicIdInput = byId('topicIdInput');
   var topicSelectInput = byId('topicSelectInput');
@@ -437,6 +447,55 @@
     }
   }
 
+  function parseQuizId(value) {
+    var n = parseInt(String(value || '').trim(), 10);
+    return isNaN(n) ? null : n;
+  }
+
+  function isQuizIdOnlyRange(quizId) {
+    return typeof quizId === 'number' && quizId > 0 && quizId < SAMPLE_QUIZ_ID_MIN;
+  }
+
+  function setControlDisabled(el, disabled) {
+    if (!el) {
+      return;
+    }
+    el.disabled = !!disabled;
+  }
+
+  function applyQuizIdModeByInput(quizId) {
+    // Pitts source stays quiz-id-only by design.
+    if (isPittsSource) {
+      setQuizIdOnlyMode(true);
+      setControlDisabled(topicSelectInput, true);
+      setControlDisabled(topicIdInput, true);
+      setControlDisabled(quizIdSelect, true);
+      setControlDisabled(rdfIdInput, true);
+      if (modeHint) {
+        modeHint.textContent = 'Pitts mode: only Quiz ID loading is supported.';
+      }
+      return;
+    }
+
+    var inIdOnlyRange = isQuizIdOnlyRange(quizId);
+    // Keep layout stable; only disable related controls for legacy (<900) quizzes.
+    setQuizIdOnlyMode(false);
+    setControlDisabled(topicSelectInput, inIdOnlyRange);
+    setControlDisabled(topicIdInput, inIdOnlyRange);
+    setControlDisabled(quizIdSelect, inIdOnlyRange);
+    setControlDisabled(rdfIdInput, inIdOnlyRange);
+
+    if (modeHint) {
+      if (inIdOnlyRange) {
+        modeHint.textContent = 'Quiz ID < 900: keep using Quiz ID Load. Topic/Quiz options/RDF inputs are disabled.';
+      } else if (typeof quizId === 'number' && quizId >= SAMPLE_QUIZ_ID_MIN) {
+        modeHint.textContent = 'Quiz ID >= 900: sample mapping mode enabled (Topic + Quiz options + RDF available).';
+      } else {
+        modeHint.textContent = 'Enter Quiz ID. Rule: >= 900 uses sample mapping mode; < 900 uses Quiz-ID-only mode.';
+      }
+    }
+  }
+
   function clearTopicOptions() {
     topicSelectInput.innerHTML = '';
     var defaultOption = document.createElement('option');
@@ -452,7 +511,11 @@
       opt.value = t.topicId;
       opt.setAttribute('data-key', t.key || '');
       opt.setAttribute('data-title', t.title || '');
-      opt.textContent = (t.key || ('topic_' + t.topicId)) + ' - ' + (t.title || '');
+      var displayTitle = String(t.title || '').replace(/\s*\(sample quiz topic\)\s*$/i, '').trim();
+      if (displayTitle) {
+        displayTitle += ' (sample quiz)';
+      }
+      opt.textContent = (t.key || ('topic_' + t.topicId)) + ' - ' + (displayTitle || (t.title || ''));
       topicSelectInput.appendChild(opt);
     });
   }
@@ -519,6 +582,8 @@
 
   async function fillForm(quiz) {
     if (!quiz) return;
+    var quizIdNum = parseQuizId(quiz.quizId);
+    applyQuizIdModeByInput(quizIdNum);
     var lang = normalizeLanguage(quiz.domain || quiz.language || sourceLanguage);
     var titleFallback = quiz.codeHeaderFileName || extractCodeHeaderFileName(quiz.code) || ('Quiz ' + (quiz.quizId || ''));
     var cleanedTitle = cleanQuizTitle(quiz.title, titleFallback);
@@ -552,7 +617,12 @@
   quizIdSelect.addEventListener('change', function() {
     if (quizIdSelect.value) {
       quizIdInput.value = quizIdSelect.value;
+      applyQuizIdModeByInput(parseQuizId(quizIdSelect.value));
     }
+  });
+
+  quizIdInput.addEventListener('input', function() {
+    applyQuizIdModeByInput(parseQuizId(quizIdInput.value));
   });
 
   supportFilePickerInput.addEventListener('change', function() {
@@ -579,6 +649,8 @@
       setStatus(loadStatus, 'alert-warning', 'Please input Quiz ID first.');
       return;
     }
+
+    applyQuizIdModeByInput(parseQuizId(quizId));
 
     setStatus(loadStatus, 'alert-info', 'Loading quiz #' + quizId + ' ...');
     try {
@@ -692,6 +764,7 @@
   } else {
     setQuizIdOnlyMode(false);
   }
+  applyQuizIdModeByInput(parseQuizId(quizIdInput.value));
   loadTopicOptions();
 })();
 // END quizpet-generator client script
