@@ -11,7 +11,7 @@ environment and run tests:
     `./node_modules/.bin/wdio`
 
 You can also run individual test specifications e.g.
-`./node_modules/.bin/wdio --spec node_modules/acos-jsparsons-python/tests/basic-content-tests.js`
+`./node_modules/.bin/wdio --spec node_modules/<package-name>/tests/basic-content-tests.js`
 or individual tests with name matching e.g.
 `./node_modules/.bin/wdio --mochaOpts.grep 'ps_hello'`.
 
@@ -36,5 +36,5 @@ This can be altered in `specs` array in the `wdio.conf.js` file.
 
 # Writing Tests
 
-Examples of written tests can be found in `acos-jsparsons-python` module. For
+Examples of written tests can be found in installed ACOS content packages. For
 WebDriverIO details refer to the [WebDriverIO API Docs](https://webdriver.io/docs/api.html).

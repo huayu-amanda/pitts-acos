@@ -33,8 +33,8 @@ with npm. E.g.:
 npm install github:acos-server/acos-jsvee
 
 # When using npm3 you can also install the dependencies of a content package
-# straightaway, e.g. this would also install acos-jsparsons correctly:
-npm install acos-jsparsons-python
+# straightaway, e.g. install one content package directly:
+npm install <content-package-name>
   ```
 
 ## Running
@@ -97,7 +97,6 @@ Please see [doc/development.md](doc/development.md).
   * [acos-aplus](https://github.com/acos-server/acos-aplus) Support for [A+](github.com/Aalto-LeTech/a-plus) -protocol
   * [acos-html](https://github.com/acos-server/acos-html) Displaying learning
   activities within an iframe without any communication with a LMS
-  * [acos-lti](https://github.com/acos-server/acos-lti) Support for LTI-protocol
   * [acos-pitt](https://github.com/acos-server/acos-pitt) Protocol to
   communicate with the University of Pittsburgh
 
@@ -106,19 +105,12 @@ Please see [doc/development.md](doc/development.md).
   JSVEE program visualizations
   * [acos-annotated](https://github.com/acos-server/acos-annotated) Content type
   for annotated code examples
-  * [acos-jsparsons](https://github.com/acos-server/acos-jsvee) Content type for
-  js-parsons code construction problems
 
 ### Acos Content Packages:
   * [acos-jsvee-java](https://github.com/acos-server/acos-jsvee-java) Java code
   visualization content
-  * [acos-jsparsons-python](https://github.com/acos-server/acos-jsparsons-python)
-  Python code construction content
-  * [acos-jsparsons-python-custom](https://github.com/acos-server/acos-jsparsons-python-custom) Content package that enables creating js-parsons Python content that
-  that is defined as an external JSON-file.
 
 ### Acos Tool Packages
-  * [acos-jsparsons-generator](https://github.com/acos-server/acos-jsparsons-generator) Tool to generate js-parsons exercises as JSON-file, used with [acos-jsparsons-python-custom](https://github.com/acos-server/acos-jsparsons-python-custom)
   * [acos-python-parser](https://github.com/acos-server/acos-python-parser) Tool to parse Python code
  into a concept tree.
   * [acos-logging-keygenerator](https://github.com/acos-server/acos-logging-keygenerator) Tool to create keypairs for logging

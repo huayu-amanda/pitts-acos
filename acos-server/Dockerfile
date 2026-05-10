@@ -1,32 +1,39 @@
 FROM node:18-bullseye
 
-# Set working directory
-WORKDIR /usr/src/app
+#1 [Required] Set the working directory
+# Use the actual WORKDIR used by the target acos-server environment;
+# this default is only a template value.
+ARG APP_DIR=/usr/src/app
+WORKDIR ${APP_DIR}
 
-# Add required intermediate CA so Node HTTPS can validate adapt2 chain.
+#2 [Environment-specific - keep only if needed]
+# Purpose: when acos-server needs to access an external QuizPet source over HTTPS
+# (for example, adapt2), these CA files help avoid TLS verification failures.
+# If the target environment already has a complete CA chain configured at system level,
+# or does not access that external source, this block can be removed.
 COPY ./acos-server/certs/InCommonRSAServerCA2.pem /usr/local/share/ca-certificates/InCommonRSAServerCA2.crt
 COPY ./acos-server/certs/USERTrustRSAAAACA.pem /usr/local/share/ca-certificates/USERTrustRSAAAACA.crt
-COPY ./acos-server/certs/adapt2-extra-ca.pem /usr/src/app/certs/adapt2-extra-ca.pem
+COPY ./acos-server/certs/adapt2-extra-ca.pem ${APP_DIR}/certs/adapt2-extra-ca.pem
 RUN update-ca-certificates
-ENV NODE_EXTRA_CA_CERTS=/usr/src/app/certs/adapt2-extra-ca.pem
+ENV NODE_EXTRA_CA_CERTS=${APP_DIR}/certs/adapt2-extra-ca.pem
 
-# 0. Copy local content-type packages referenced via file paths
-COPY ./acos-jsparsons /usr/src/acos-jsparsons
+#3 [Optional - typically already present] Copy acos-server code (including package*.json)
+# If an equivalent COPY step already exists in the target Dockerfile,
+# keep the existing implementation and do not duplicate it.
+COPY ./acos-server ${APP_DIR}
 
-# 1. Copy acos-server project code (including package*.json)
-COPY ./acos-server /usr/src/app
-
-# 2. Install acos-server dependencies
+#4 [Optional - typically already present] Install base acos-server dependencies
+# If an equivalent dependency install step already exists (npm/yarn/pnpm),
+# do not duplicate it.
 RUN npm install
 
-# 3. Install official content packages + lti
-RUN npm install \
-    github:acos-server/acos-lti
+#5 [Required] Install the jstracing custom content type added in this integration
+# For pitts-quizpet-acos integration
+COPY ./acos-jstracing ${APP_DIR}/acos-jstracing
+RUN npm install ./acos-jstracing
 
-# 4. Copy and install local custom content types
-COPY ./acos-jstracing /usr/src/app/acos-jstracing
-RUN npm install /usr/src/acos-jsparsons && npm install ./acos-jstracing
-
-# 5. Expose port & start
+#6 [Optional - typically already present] Expose service port and start command
+# If the target setup already defines port and startup conventions,
+# keep those existing settings.
 EXPOSE 3000
 CMD ["npm", "start"]

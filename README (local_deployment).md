@@ -1,6 +1,6 @@
-# QuizPet ACOS Python Tracing Local Docker Deployment Guide
+# pitts-quizpet-acos Local Docker Deployment Guide
 
-This document explains how to deploy and run `quizpet-acos` locally with Docker after cloning from GitHub.
+This document explains how to deploy and run `pitts-quizpet-acos` locally with Docker after cloning from GitHub.
 
 The process follows three key steps:
 1. Start core services with Docker Compose:
@@ -50,8 +50,8 @@ Versions defined in Docker/Compose files:
 ## 2. Clone the Repository
 
 ```bash
-git clone <your-repo-url> quizpet-acos
-cd quizpet-acos
+git clone <your-repo-url> pitts-quizpet-acos
+cd pitts-quizpet-acos
 ```
 
 ## 3. Start Core Services (MySQL/Tomcat/ACOS)
@@ -83,7 +83,7 @@ Run from repository root:
 # quizpet-mysql database :
 # user/password: root/rootpassword
 
-cd /quizpet-acos
+cd /pitts-quizpet-acos
 docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/init-db.sql
 ```
 
@@ -93,7 +93,7 @@ docker exec -i quizpet-mysql mariadb -uroot -prootpassword < QuizPetAuthoring/in
 Import in the following order (recommended):
 
 ```bash
-cd /quizpet-acos
+cd /pitts-quizpet-acos
 
 # Keep login available
 docker exec quizpet-mysql mariadb -uroot -prootpassword -e "USE quizpet; TRUNCATE TABLE ent_user;"

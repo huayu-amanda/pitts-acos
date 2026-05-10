@@ -1,6 +1,0 @@
-{
-  "name": "ps_python_addition",
-  "description": "python addition",
-  "instructions": "Construct a program that prints the value 8.",
-  "initial": "first = 3\nfirst = first + 1\nfirst = first + first\nprint(first)"
-}

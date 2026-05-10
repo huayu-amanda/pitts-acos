@@ -383,6 +383,7 @@ Object.keys(handlers.contentTypes).forEach(function(contentType) {
 var api = express.Router();
 app.use('/api/v1', api);
 
+// For pitts-quizpet-acos integration
 // quizpet-generator routes are encapsulated in a dedicated module.
 registerQuizpetGeneratorRoutes(app, handlers);
 // ********************************************************************************
@@ -396,6 +397,7 @@ registerQuizpetGeneratorRoutes(app, handlers);
 var urlPrefix = '/:protocol([a-zA-Z0-9_-]+)/:contentType([a-zA-Z0-9_-]+)/:contentPackage([a-zA-Z0-9_-]+)/:name([a-zA-Z0-9_-]+)';
 app.all(urlPrefix, function(req, res, next) {
 
+  // For pitts-quizpet-acos integration
   // This generic 4-segment matcher can also match tool paths like
   // /quizpet-generator/api/quiz/:id as protocol=quizpet-generator, ...
   // If that happens, ACOS content handling returns "Unsupported request!".
@@ -564,6 +566,7 @@ app.get('/', function(req, res) {
     params.tools.push(tool);
   }
 
+  // For pitts-quizpet-acos integration
   // BEGIN quizpet-generator tools link fallback
   if (params.tools.indexOf('quizpet-generator') === -1) {
     params.tools.push('quizpet-generator');
