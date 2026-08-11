@@ -1,0 +1,12 @@
+{
+  "id": "jstracing-java",
+  "title": "JSTracing Java examples",
+  "description": "Tracing exercises for Java.",
+  "type": "jstracing",
+  "files": [
+    {
+      "name": "sample_quiz.json",
+      "role": "exercise"
+    }
+  ]
+}

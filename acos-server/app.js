@@ -21,7 +21,6 @@ var _ = require('lodash');
 var http = require('http');
 var https = require('https');
 var config = require('./config');
-var registerQuizpetGeneratorRoutes = require('./routes/quizpet-generator');
 
 
 const publicDirectory = path.join(__dirname, 'public');
@@ -382,10 +381,6 @@ Object.keys(handlers.contentTypes).forEach(function(contentType) {
 // Prioritize API URLs
 var api = express.Router();
 app.use('/api/v1', api);
-
-// For pitts-quizpet-acos integration
-// quizpet-generator routes are encapsulated in a dedicated module.
-registerQuizpetGeneratorRoutes(app, handlers);
 // ********************************************************************************
 
 
@@ -402,7 +397,7 @@ app.all(urlPrefix, function(req, res, next) {
   // /quizpet-generator/api/quiz/:id as protocol=quizpet-generator, ...
   // If that happens, ACOS content handling returns "Unsupported request!".
   // Skip here and pass control to the dedicated quizpet-generator routes below.
-  if (req.params.protocol === 'quizpet-generator') {
+  if (req.params.protocol === 'quizpet-generator' || req.params.protocol === 'quizpet-generator-pitts') {
     return next();
   }
 
@@ -565,13 +560,6 @@ app.get('/', function(req, res) {
   for (var tool in handlers.tools) {
     params.tools.push(tool);
   }
-
-  // For pitts-quizpet-acos integration
-  // BEGIN quizpet-generator tools link fallback
-  if (params.tools.indexOf('quizpet-generator') === -1) {
-    params.tools.push('quizpet-generator');
-  }
-  // END quizpet-generator tools link fallback
 
   res.render('index.html', params);
 

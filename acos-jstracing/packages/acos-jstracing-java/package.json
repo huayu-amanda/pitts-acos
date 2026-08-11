@@ -1,0 +1,9 @@
+{
+  "name": "acos-jstracing-java",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "ISC",
+  "packageType": "content",
+  "namespace": "jstracing-java",
+  "contentTypeNamespace": "jstracing"
+}

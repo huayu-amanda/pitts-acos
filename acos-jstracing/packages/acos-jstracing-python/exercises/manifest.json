@@ -1,0 +1,12 @@
+{
+  "id": "jstracing-python",
+  "title": "JSTracing Python examples",
+  "description": "Tracing exercises for Python.",
+  "type": "jstracing",
+  "files": [
+    {
+      "name": "sample_quiz.json",
+      "role": "exercise"
+    }
+  ]
+}

@@ -182,3 +182,170 @@ docker compose up -d --build --remove-orphans
 ```
 
 Warning: `down -v` deletes database data.
+
+## 8. Refactor Migration Checklist (version-3.2)
+
+This section documents the structural refactor on branch `version-3.2`.
+
+### 8.1 Refactor Goal
+
+- Align package responsibilities with ACOS package lifecycle:
+	- content-type: only registers/rendering behavior for `jstracing`
+	- content: each package owns its own manifest/content registration
+	- tool: `quizpet-generator` is loaded as an installed ACOS tool
+- Keep existing external URLs stable while decoupling internal code boundaries.
+
+Comment:
+- The key principle is separation of concerns. This makes future maintenance (adding new language packages/tools) safer and easier.
+
+### 8.2 New Top-Level Components
+
+Added:
+- `acos-jstracing/packages/acos-jstracing-type/`
+- `acos-jstracing/packages/acos-jstracing-python/`
+- `acos-jstracing/packages/acos-jstracing-java/`
+- `acos-quizpet-generator-tool/`
+
+Comment:
+- `acos-jstracing-common/` is intentionally not added in this version to avoid premature abstraction; shared logic can be extracted later if duplication grows.
+
+### 8.3 Detailed File Migration and Rationale
+
+1. Content-type package created
+
+Added:
+- `acos-jstracing/packages/acos-jstracing-type/index.js`
+- `acos-jstracing/packages/acos-jstracing-type/package.json`
+- `acos-jstracing/packages/acos-jstracing-type/lib/jstracing/index.js`
+- `acos-jstracing/packages/acos-jstracing-type/lib/jstracing/fetch_quiz.js`
+- `acos-jstracing/packages/acos-jstracing-type/lib/jstracing/frontend/*`
+- `acos-jstracing/packages/acos-jstracing-type/static/*`
+
+Comment:
+- `index.js` in this package only performs content-type registration and static/tooling mount responsibilities.
+
+2. Python content package separated
+
+Added:
+- `acos-jstracing/packages/acos-jstracing-python/index.js`
+- `acos-jstracing/packages/acos-jstracing-python/package.json`
+- `acos-jstracing/packages/acos-jstracing-python/manifest.json`
+- `acos-jstracing/packages/acos-jstracing-python/exercises/*.json`
+
+Comment:
+- This package reads its own `manifest.json`, constructs `meta.contents`, and registers itself into `handlers.contentPackages`.
+
+3. Java content package separated
+
+Added:
+- `acos-jstracing/packages/acos-jstracing-java/index.js`
+- `acos-jstracing/packages/acos-jstracing-java/package.json`
+- `acos-jstracing/packages/acos-jstracing-java/manifest.json`
+- `acos-jstracing/packages/acos-jstracing-java/exercises/*.json`
+
+Comment:
+- Java package registration mirrors Python package behavior and keeps language-specific content ownership local.
+
+4. Root jstracing entrypoint converted to orchestrator
+
+Updated:
+- `acos-jstracing/lib/index.js`
+
+Before:
+- One file handled content-type registration and both content-package registrations.
+
+After:
+- The file delegates registration to:
+	- `acos-jstracing-type`
+	- `acos-jstracing-python`
+	- `acos-jstracing-java`
+
+Comment:
+- This is the core boundary change that aligns with the PCEX-style modular model.
+
+5. Root jstracing packaging metadata updated
+
+Updated:
+- `acos-jstracing/package.json`
+
+Change:
+- Added `packages/` to the `files` list.
+
+Comment:
+- Ensures the new package subtree is included when installing `acos-jstracing`.
+
+6. quizpet-generator extracted as standalone tool package
+
+Added:
+- `acos-quizpet-generator-tool/index.js`
+- `acos-quizpet-generator-tool/package.json`
+- `acos-quizpet-generator-tool/routes/quizpet-generator.js`
+- `acos-quizpet-generator-tool/services/quizpet-generator-service.js`
+- `acos-quizpet-generator-tool/services/quizpet-topic-options.js`
+- `acos-quizpet-generator-tool/views/quizpet-generator.html`
+
+Comment:
+- The tool registers itself through `packageType = tool` and `handlers.tools`, which matches ACOS auto-discovery semantics.
+
+7. quizpet-generator route path resolution updated for new layout
+
+Updated:
+- `acos-quizpet-generator-tool/routes/quizpet-generator.js`
+
+Change highlights:
+- `fetch_quiz` lookup now checks the new content-type package path first.
+- content package directory resolution now checks `acos-jstracing/packages/acos-<packageId>` first.
+- Legacy paths are kept as fallbacks for compatibility.
+
+Comment:
+- This preserves runtime behavior while migrating directory ownership.
+
+8. ACOS core app decoupled from direct generator registration
+
+Updated:
+- `acos-server/app.js`
+
+Removed:
+- direct `require('./routes/quizpet-generator')`
+- direct `registerQuizpetGeneratorRoutes(app, handlers)` call
+- manual homepage fallback insertion for quizpet-generator
+
+Kept:
+- generic route skip compatibility for `quizpet-generator` and `quizpet-generator-pitts` path patterns
+
+Comment:
+- ACOS core now stays package-agnostic; tool registration responsibility moves to the tool package.
+
+9. Docker image wiring updated for tool package installation
+
+Updated:
+- `acos-server/Dockerfile`
+
+Added:
+- copy/install `./acos-quizpet-generator-tool` into app image
+
+Comment:
+- Without this step, auto-discovery would not find the tool in containerized deployments.
+
+### 8.4 Compatibility Notes
+
+- Expected user-facing URLs remain unchanged:
+	- `/quizpet-generator`
+	- `/quizpet-generator-pitts`
+	- `/html/jstracing/jstracing-python/<exercise>`
+	- `/html/jstracing/jstracing-java/<exercise>`
+
+Comment:
+- This refactor is structural. Functional behavior should remain consistent under the same environment configuration.
+
+### 8.5 Validation Checklist (Post-Refactor)
+
+- ACOS homepage shows `jstracing` in content types.
+- ACOS homepage shows both `jstracing-python` and `jstracing-java` content packages.
+- ACOS homepage shows `quizpet-generator` in tools (from `handlers.tools`).
+- `/quizpet-generator` page loads and APIs respond.
+- `/html/jstracing/jstracing-python/sample_quiz` loads.
+- `/html/jstracing/jstracing-java/sample_quiz` loads.
+
+Comment:
+- If any item fails, first verify package installation paths in container (`acos-server/Dockerfile`) and auto-discovery logs on server startup.

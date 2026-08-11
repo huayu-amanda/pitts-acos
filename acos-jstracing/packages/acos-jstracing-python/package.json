@@ -1,0 +1,9 @@
+{
+  "name": "acos-jstracing-python",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "ISC",
+  "packageType": "content",
+  "namespace": "jstracing-python",
+  "contentTypeNamespace": "jstracing"
+}

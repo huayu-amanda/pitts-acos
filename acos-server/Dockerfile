@@ -32,7 +32,11 @@ RUN npm install
 COPY ./acos-jstracing ${APP_DIR}/acos-jstracing
 RUN npm install ./acos-jstracing
 
-#6 [Optional - typically already present] Expose service port and start command
+#6 [Required] Install quizpet-generator as an ACOS tool package
+COPY ./acos-quizpet-generator-tool ${APP_DIR}/acos-quizpet-generator-tool
+RUN npm install ./acos-quizpet-generator-tool
+
+#7 [Optional - typically already present] Expose service port and start command
 # If the target setup already defines port and startup conventions,
 # keep those existing settings.
 EXPOSE 3000
