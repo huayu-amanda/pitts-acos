@@ -1,11 +1,11 @@
-// lib/jstracing/index.js
+// runtime.js
 "use strict";
 
 const path = require("path");
 const fs = require("fs");
 const http = require('http');
 const https = require('https');
-const fetchQuizHelper = require('./fetch_quiz');
+const fetchQuizHelper = require('../../fetch-quiz');
 
 const getSessionFilePath = (contentPackageDir, exerciseName) =>
   path.join(contentPackageDir, `${exerciseName}.session.json`);
@@ -194,16 +194,11 @@ const JSTracing = {
       sessionData.expectedResult = "";
       sessionData.verdict = "";
 
-      // 3. Read the frontend HTML template
-      //    Assumed to be at jstracing/frontend/index.html
-      const frontendDir = path.join(__dirname, "frontend");
-      const htmlPath = path.join(frontendDir, "index.html");
+      // 3. Read the HTML body template from the flattened static layout.
+      const htmlPath = path.join(__dirname, "..", "..", "static", "body.html");
 
       if (!fs.existsSync(htmlPath)) {
-        console.error(
-          "[jstracing] ERROR: frontend index.html not found:",
-          htmlPath
-        );
+        console.error("[jstracing] ERROR: body.html not found:", htmlPath);
         params.error = true;
         return cb();
       }
@@ -255,9 +250,9 @@ const JSTracing = {
           // 5. Put the generated HTML into bodyContent for ACOS to render
           params.bodyContent = html;
           params.headContent = params.headContent || "";
-          if (!/\/static\/jstracing\/jstracing\.css/.test(params.headContent)) {
+          if (!/\/static\/jstracing\/css\/jstracing\.css/.test(params.headContent)) {
             params.headContent +=
-              '<meta charset="utf-8" />\n<link rel="stylesheet" href="/static/jstracing/jstracing.css" />\n';
+              '<meta charset="utf-8" />\n<link rel="stylesheet" href="/static/jstracing/css/jstracing.css" />\n';
           }
 
           cb();

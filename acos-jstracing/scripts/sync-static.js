@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 
 const root = path.join(__dirname, "..");
-const srcDir = path.join(root, "lib", "jstracing", "frontend");
+const srcDir = path.join(root, "packages", "acos-jstracing-type", "static");
 const outDir = path.join(root, "static");
 
 const copy = (from, to) => {
@@ -14,9 +14,9 @@ const copy = (from, to) => {
 
 const main = () => {
   const pairs = [
-    [path.join(srcDir, "jstracing.js"), path.join(outDir, "jstracing.js")],
-    [path.join(srcDir, "jstracing.css"), path.join(outDir, "jstracing.css")],
-    [path.join(srcDir, "runtime-config.js"), path.join(outDir, "runtime-config.js")],
+    [path.join(srcDir, "js", "jstracing.js"), path.join(outDir, "jstracing.js")],
+    [path.join(srcDir, "css", "jstracing.css"), path.join(outDir, "jstracing.css")],
+    [path.join(srcDir, "js", "runtime-config.js"), path.join(outDir, "runtime-config.js")],
   ];
 
   for (const [from, to] of pairs) {
@@ -27,7 +27,7 @@ const main = () => {
   }
 
   // eslint-disable-next-line no-console
-  console.log("[acos-jstracing] synced static assets from lib/jstracing/frontend -> static/");
+  console.log("[acos-jstracing] synced static assets from packages/acos-jstracing-type/static -> static/");
 };
 
 main();

@@ -3,7 +3,7 @@
 const path = require("path");
 const fs = require("fs");
 const express = require("express");
-const JSTracing = require("./lib/jstracing");
+const JSTracing = require("./runtime");
 
 exports.packageType = "content-type";
 exports.namespace = "jstracing";

@@ -37,7 +37,7 @@
     </div>
 </div>
 
-<!-- 由后端注入练习数据：lib/jstracing/index.js 中用 EXERCISE_JSON 替换 -->
+<!-- 由后端注入练习数据：runtime.js 中用 EXERCISE_JSON 替换 -->
 <script>
   window.JSTRACING_ASSET_VERSION = "20260420-mainthread-cheerpj-1";
   // 这里的 {{EXERCISE_JSON}} 会在服务器端被替换为一个 JSON 字符串，
@@ -49,7 +49,7 @@
 </script>
 
 <!-- Centralized runtime config (Python keeps using this) -->
-<script src="/static/jstracing/runtime-config.js?v=20260420-mainthread-cheerpj-1"></script>
+<script src="/static/jstracing/js/runtime-config.js?v=20260420-mainthread-cheerpj-1"></script>
 
 <!-- Pyodide (Python in the browser, loaded from centralized config) -->
 <script>
@@ -69,4 +69,4 @@
 </div>
 
 <!-- 前端逻辑脚本（使用 window.JSTRACING_EXERCISE） -->
-<script src="/static/jstracing/jstracing.js?v=20260420-mainthread-cheerpj-1"></script>
+<script src="/static/jstracing/js/jstracing.js?v=20260420-mainthread-cheerpj-1"></script>

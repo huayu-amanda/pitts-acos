@@ -11,7 +11,7 @@ var createQuizpetGeneratorService = require('../services/quizpet-generator-servi
 var tryFetchQuizData = null;
 var getLastFetchQuizDiagnostic = null;
 try {
-  var fetchQuizModuleLocal = require(path.join(__dirname, '..', '..', 'acos-jstracing', 'packages', 'acos-jstracing-type', 'lib', 'jstracing', 'fetch_quiz'));
+  var fetchQuizModuleLocal = require(path.join(__dirname, '..', '..', 'acos-jstracing', 'packages', 'acos-jstracing-type', 'fetch-quiz'));
   // tryFetchQuizCode = fetchQuizModuleLocal.tryFetchQuizCode;
   tryFetchQuizData = fetchQuizModuleLocal.tryFetchQuizData;
   getLastFetchQuizDiagnostic = fetchQuizModuleLocal.getLastFetchQuizDiagnostic;
