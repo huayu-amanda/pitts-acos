@@ -1,8 +1,8 @@
 "use strict";
 
-const registerType = require("../packages/acos-jstracing-type");
-const registerPythonPackage = require("../packages/acos-jstracing-python");
-const registerJavaPackage = require("../packages/acos-jstracing-java");
+const registerType = require("../acos-jstracing-type");
+const registerPythonPackage = require("../acos-jstracing-python");
+const registerJavaPackage = require("../acos-jstracing-java");
 
 exports.packageType = "content-type";
 exports.namespace = "jstracing";

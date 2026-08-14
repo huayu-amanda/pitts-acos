@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 
 const root = path.join(__dirname, "..");
-const srcDir = path.join(root, "packages", "acos-jstracing-type", "static");
+const srcDir = path.join(root, "acos-jstracing-type", "static");
 const outDir = path.join(root, "static");
 
 const copy = (from, to) => {
@@ -27,7 +27,7 @@ const main = () => {
   }
 
   // eslint-disable-next-line no-console
-  console.log("[acos-jstracing] synced static assets from packages/acos-jstracing-type/static -> static/");
+  console.log("[acos-jstracing] synced static assets from acos-jstracing-type/static -> static/");
 };
 
 main();

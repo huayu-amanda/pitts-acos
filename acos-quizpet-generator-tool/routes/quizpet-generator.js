@@ -11,7 +11,7 @@ var createQuizpetGeneratorService = require('../services/quizpet-generator-servi
 var tryFetchQuizData = null;
 var getLastFetchQuizDiagnostic = null;
 try {
-  var fetchQuizModuleLocal = require(path.join(__dirname, '..', '..', 'acos-jstracing', 'packages', 'acos-jstracing-type', 'fetch-quiz'));
+  var fetchQuizModuleLocal = require(path.join(__dirname, '..', '..', 'acos-jstracing', 'acos-jstracing-type', 'fetch-quiz'));
   // tryFetchQuizCode = fetchQuizModuleLocal.tryFetchQuizCode;
   tryFetchQuizData = fetchQuizModuleLocal.tryFetchQuizData;
   getLastFetchQuizDiagnostic = fetchQuizModuleLocal.getLastFetchQuizDiagnostic;
@@ -139,9 +139,10 @@ var normalizeSupportFiles = function(rawValue) {
 var resolveJSTracingPackageDir = function(packageId) {
   var pkg = String(packageId || 'jstracing-python').trim();
   var candidates = [
-    path.join(__dirname, '..', '..', 'acos-jstracing', 'packages', 'acos-' + pkg),
-    path.join(__dirname, '..', 'node_modules', 'acos-jstracing', pkg),
-    path.join(__dirname, '..', '..', 'acos-jstracing', pkg)
+    path.join(__dirname, '..', '..', 'acos-jstracing', 'acos-' + pkg),
+    path.join(__dirname, '..', '..', 'acos-jstracing', pkg),
+    path.join(__dirname, '..', 'node_modules', 'acos-jstracing', 'acos-' + pkg),
+    path.join(__dirname, '..', 'node_modules', 'acos-jstracing', pkg)
   ];
 
   for (var i = 0; i < candidates.length; i++) {
