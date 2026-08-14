@@ -3,7 +3,7 @@
 const path = require("path");
 const express = require("express");
 
-const acosJstracing = require("../lib/index.js");
+const acosJstracing = require("../../index.js");
 
 const createHandlers = () => ({
   protocols: {},

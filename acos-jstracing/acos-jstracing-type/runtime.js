@@ -5,7 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const http = require('http');
 const https = require('https');
-const fetchQuizHelper = require('../../fetch-quiz');
+const fetchQuizHelper = require('./fetch-quiz');
 
 const getSessionFilePath = (contentPackageDir, exerciseName) =>
   path.join(contentPackageDir, `${exerciseName}.session.json`);
@@ -77,7 +77,7 @@ const legacyDirectForwardGradeToQuizPet = (req, payload, protocolData) => {
 
 /**
  * JSTracing content type object
- * Registered to handlers.contentTypes['jstracing'] by acos-jstracing/lib/index.js
+ * Registered to handlers.contentTypes['jstracing'] by acos-jstracing/index.js
  */
 const JSTracing = {
   namespace: "jstracing",        // ★ New
@@ -92,7 +92,7 @@ const JSTracing = {
     keywords: [],
   },
 
-  // Filled by lib/index.js:
+  // Filled by index.js:
   // installedContentPackages: [ { meta, dir, ... }, ... ]
   installedContentPackages: [],
 
@@ -142,7 +142,7 @@ const JSTracing = {
       }
 
       // 2. Read the exercise JSON file
-      //    lib/index.js sets contentPackage.dir to the directory of jstracing-python
+      //    index.js sets contentPackage.dir to the directory of jstracing-python
       const exercisePath = path.join(contentPackage.dir, exerciseMeta.file);
       if (!fs.existsSync(exercisePath)) {
         console.error(

@@ -299,8 +299,10 @@ var initPackage = function(name, package) {
 
     if (package.register) {
       package.register(handlers, app, config);
-      // Serve static content that is inside the installed package
-      app.use('/static/' + package.namespace, express.static(__dirname + '/node_modules/' + name + '/static'));
+      // Serve static content that is inside the installed package. Some packages
+      // expose runtime assets from a subdirectory instead of root-level static/.
+      var staticDir = package.staticDir || 'static';
+      app.use('/static/' + package.namespace, express.static(path.join(__dirname, 'node_modules', name, staticDir)));
       console.log('[ACOS Server] ' + 'INFO:'.green +
         ' Package ' + name.yellow + ' is installed.');
     } else {

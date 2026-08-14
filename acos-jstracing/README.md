@@ -2,19 +2,23 @@
 
 In this repository, `acos-jstracing` is both an **ACOS content-type module** and a **standalone npm project** for convenient UI and Pyodide debugging.
 
-## Development Conventions (Legacy-first Layout)
+## Development Conventions (Type-centered Layout)
 
-- UI source (this is where you mainly make changes): `lib/jstracing/frontend/`
-- Static assets served to `acos-server`: `static/`
+- Content type runtime and frontend source: `acos-jstracing-type/`
+- Content packages: `acos-jstracing-python/`, `acos-jstracing-java/`
 
-`acos-server` only maps the installed package's `static/` directory to `/static/jstracing`, so `static/` must exist.
-To avoid maintaining duplicate files, this project automatically syncs before `npm run dev/start`:
+Runtime assets are now centralized under:
+
+- `acos-jstracing-type/static/body.html`
+- `acos-jstracing-type/static/css/jstracing.css`
+- `acos-jstracing-type/static/js/jstracing.js`
+- `acos-jstracing-type/static/js/runtime-config.js`
+
+Before `npm run dev/start`, this project validates static asset presence:
 
 ```bash
 npm run sync-static
 ```
-
-This syncs `lib/jstracing/frontend/jstracing.(js|css)` to `static/`.
 
 ## Standalone Run (Without Docker)
 
@@ -30,17 +34,12 @@ npm run dev
 - Exercise page URL format is consistent with `acos-server`:
   - `http://localhost:3030/html/jstracing/jstracing-python/sample_quiz`
 
-After running, `<exercise>.session.json` is generated/updated under `jstracing-python/` (for example, `sample_quiz.session.json`).
+After running, `<exercise>.session.json` is generated/updated under `acos-jstracing-python/` (for example, `sample_quiz.session.json`).
 
 ## Embed Into acos-server (As a Module)
 
-`acos-server` maps the installed package's `static/` to: `/static/<package.namespace>`.
-
-Frontend assets in this package:
-- `static/jstracing.css`
-- `static/jstracing.js`
-
-Therefore, after embedding, the page loads assets from `/static/jstracing/...`.
+`acos-server` maps package static files to `/static/<package.namespace>`.
+For `acos-jstracing`, the mapping is explicitly kept as `/static/jstracing/...`.
 
 ### Recommended Local Development Switch Options (Flexible)
 

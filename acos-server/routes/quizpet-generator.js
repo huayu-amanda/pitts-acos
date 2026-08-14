@@ -11,20 +11,28 @@ var createQuizpetGeneratorService = require('../services/quizpet-generator-servi
 var tryFetchQuizData = null;
 var getLastFetchQuizDiagnostic = null;
 try {
-  var fetchQuizModuleLocal = require(path.join(__dirname, '..', '..', 'acos-jstracing', 'lib', 'jstracing', 'fetch_quiz'));
+  var fetchQuizModuleLocal = require(path.join(__dirname, '..', '..', 'acos-jstracing', 'acos-jstracing-type', 'fetch-quiz'));
   // tryFetchQuizCode = fetchQuizModuleLocal.tryFetchQuizCode;
   tryFetchQuizData = fetchQuizModuleLocal.tryFetchQuizData;
   getLastFetchQuizDiagnostic = fetchQuizModuleLocal.getLastFetchQuizDiagnostic;
 } catch (e1) {
   try {
-    var fetchQuizModuleNodeModules = require(path.join(__dirname, '..', 'node_modules', 'acos-jstracing', 'lib', 'jstracing', 'fetch_quiz'));
+    var fetchQuizModuleNodeModules = require(path.join(__dirname, '..', 'node_modules', 'acos-jstracing', 'acos-jstracing-type', 'fetch-quiz'));
     // tryFetchQuizCode = fetchQuizModuleNodeModules.tryFetchQuizCode;
     tryFetchQuizData = fetchQuizModuleNodeModules.tryFetchQuizData;
     getLastFetchQuizDiagnostic = fetchQuizModuleNodeModules.getLastFetchQuizDiagnostic;
   } catch (e2) {
-    // tryFetchQuizCode = null;
-    tryFetchQuizData = null;
-    getLastFetchQuizDiagnostic = null;
+    try {
+      // Backward-compatible fallback for older installs.
+      var fetchQuizModuleLegacy = require(path.join(__dirname, '..', 'node_modules', 'acos-jstracing', 'lib', 'jstracing', 'fetch_quiz'));
+      // tryFetchQuizCode = fetchQuizModuleLegacy.tryFetchQuizCode;
+      tryFetchQuizData = fetchQuizModuleLegacy.tryFetchQuizData;
+      getLastFetchQuizDiagnostic = fetchQuizModuleLegacy.getLastFetchQuizDiagnostic;
+    } catch (e3) {
+      // tryFetchQuizCode = null;
+      tryFetchQuizData = null;
+      getLastFetchQuizDiagnostic = null;
+    }
   }
 }
 
