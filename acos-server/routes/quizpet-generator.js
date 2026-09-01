@@ -7,6 +7,8 @@ var http = require('http');
 var https = require('https');
 var createQuizpetGeneratorService = require('../services/quizpet-generator-service');
 
+var routeConfig = {};
+
 // var tryFetchQuizCode = null; // Disabled for now: generator load-quiz uses tryFetchQuizData only.
 var tryFetchQuizData = null;
 var getLastFetchQuizDiagnostic = null;
@@ -137,12 +139,35 @@ var normalizeSupportFiles = function(rawValue) {
   return result;
 };
 
+var getConfiguredJSTracingRoots = function() {
+  var roots = [];
+  var envRoot = process.env.ACOS_JSTRACING_PACKAGE_ROOT;
+  var configRoot = routeConfig && routeConfig.jstracingPackageRoot;
+
+  if (envRoot && String(envRoot).trim()) {
+    roots.push(String(envRoot).trim());
+  }
+  if (configRoot && String(configRoot).trim()) {
+    roots.push(String(configRoot).trim());
+  }
+
+  return roots;
+};
+
 var resolveJSTracingPackageDir = function(packageId) {
   var pkg = String(packageId || 'jstracing-python').trim();
-  var candidates = [
-    path.join(__dirname, '..', 'node_modules', 'acos-jstracing', pkg),
-    path.join(__dirname, '..', '..', 'acos-jstracing', pkg)
-  ];
+  var candidates = [];
+  var configuredRoots = getConfiguredJSTracingRoots();
+
+  for (var c = 0; c < configuredRoots.length; c++) {
+    candidates.push(path.join(configuredRoots[c], 'acos-' + pkg));
+    candidates.push(path.join(configuredRoots[c], pkg));
+  }
+
+  candidates.push(path.join(__dirname, '..', 'node_modules', 'acos-jstracing', pkg));
+  candidates.push(path.join(__dirname, '..', '..', 'acos-jstracing', pkg));
+  candidates.push(path.join(__dirname, '..', 'node_modules', 'acos-jstracing', 'acos-' + pkg));
+  candidates.push(path.join(__dirname, '..', '..', 'acos-jstracing', 'acos-' + pkg));
 
   for (var i = 0; i < candidates.length; i++) {
     var dir = candidates[i];
@@ -256,10 +281,6 @@ var resolveGeneratorSources = function() {
     process.env.QUIZPET_BASE_URL_LOCAL || process.env.QUIZPET_BASE_URL,
     'http://host.docker.internal:8080/quizpet'
   );
-  var pittsBase = cleanBaseUrl(
-    process.env.QUIZPET_BASE_URL_PITTS,
-    'https://adapt2.sis.pitt.edu/quizpet_authoring'
-  );
 
   return {
     local: {
@@ -271,15 +292,6 @@ var resolveGeneratorSources = function() {
       // Generator page uses admin account to load and author quizzes
       username: process.env.QUIZPET_USERNAME_ADMIN || process.env.QUIZPET_USERNAME_LOCAL || process.env.QUIZPET_USERNAME || '',
       password: process.env.QUIZPET_PASSWORD_ADMIN || process.env.QUIZPET_PASSWORD_LOCAL || process.env.QUIZPET_PASSWORD || ''
-    },
-    pitts: {
-      key: 'pitts',
-      label: 'Using adapt2-pitt QuizPetAuthoring_Java',
-      routeBase: '/quizpet-generator-pitts',
-      contentPackage: 'jstracing-java',
-      quizpetBaseUrl: pittsBase,
-      username: process.env.QUIZPET_USERNAME_PITTS || process.env.QUIZPET_USERNAME || '',
-      password: process.env.QUIZPET_PASSWORD_PITTS || process.env.QUIZPET_PASSWORD || ''
     }
   };
 };
@@ -522,7 +534,8 @@ var createQuizpetRouter = function(handlers, sourceConfig) {
       exerciseName = 'sample_quiz_' + uniqueSuffix;
     }
     var fileName = exerciseName + '.json';
-    var exercisePath = path.join(packageDir, fileName);
+    var exercisesDir = path.join(packageDir, 'exercises');
+    var exercisePath = path.join(exercisesDir, fileName);
     var manifestPath = path.join(packageDir, 'manifest.json');
 
     var exercisePayload = {
@@ -550,6 +563,10 @@ var createQuizpetRouter = function(handlers, sourceConfig) {
     }
 
     try {
+      if (!fs.existsSync(exercisesDir)) {
+        fs.mkdirSync(exercisesDir, { recursive: true });
+      }
+
       writeJsonPretty(exercisePath, exercisePayload);
 
       var manifest = readJsonSafe(manifestPath, null);
@@ -589,11 +606,10 @@ var createQuizpetRouter = function(handlers, sourceConfig) {
   return router;
 };
 
-module.exports = function registerQuizpetGeneratorRoutes(app, handlers) {
+module.exports = function registerQuizpetGeneratorRoutes(app, handlers, config) {
+  routeConfig = config || {};
   var sources = resolveGeneratorSources();
   var localRouter = createQuizpetRouter(handlers, sources.local);
-  var pittsRouter = createQuizpetRouter(handlers, sources.pitts);
 
   app.use(sources.local.routeBase, localRouter);
-  app.use(sources.pitts.routeBase, pittsRouter);
 };

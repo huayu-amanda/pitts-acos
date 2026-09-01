@@ -86,13 +86,24 @@ var inferQuizLanguage = function(quiz, code, fallbackLanguage) {
   return fallback;
 };
 
+var normalizeLoadedQuizCode = function(code, language) {
+  var source = String(code || '');
+  if (language !== 'java') {
+    return source;
+  }
+
+  // Keep Java main class name aligned with default Main.java execution flow.
+  return source.replace(/public\s+class\s+Tester\b/g, 'public class Main');
+};
+
 var buildQuizResponse = function(quiz, quizId, code, fallbackLanguage) {
   var q = quiz || {};
-  var resolvedCode = code || '';
+  var rawCode = code || '';
+  var language = inferQuizLanguage(q, rawCode, fallbackLanguage);
+  var resolvedCode = normalizeLoadedQuizCode(rawCode, language);
   var codeHeaderFileName = extractCodeHeaderFileName(resolvedCode);
   var titleFallback = codeHeaderFileName || ('Quiz ' + quizId);
   var resolvedTitle = cleanQuizTitle(q.title, titleFallback);
-  var language = inferQuizLanguage(q, resolvedCode, fallbackLanguage);
 
   return {
     quizId: q.quizId || quizId,

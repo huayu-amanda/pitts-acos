@@ -6,7 +6,7 @@
 -- Quiz 4: stack + if/else topic sample
 -- Run with: docker exec -i quizpet-mysql mariadb -uroot -prootpassword < insert-sample-ent_jquizes.sql
 
-USE quizpet;
+USE webex21;
 
 INSERT INTO `ent_jquiz` (
   `QuizID`, `AuthorID`, `GroupID`, `Title`, `Description`, `Code`, `MinVar`, `MaxVar`, `AnsType`, `Privacy`, `rdfID`, `QuesType`, `timestamp`, `rdfIdDisplay`, `version`

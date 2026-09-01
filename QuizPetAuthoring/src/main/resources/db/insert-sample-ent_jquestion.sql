@@ -3,7 +3,7 @@
 -- Run with:
 -- docker exec -i quizpet-mysql mariadb -uroot -prootpassword < insert-sample-ent_jquestion-topics.sql
 
-USE quizpet;
+USE webex21;
 
 CREATE TABLE IF NOT EXISTS `ent_jquestion` (
   `QuestionID` INT NOT NULL AUTO_INCREMENT,

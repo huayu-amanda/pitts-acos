@@ -1,4 +1,4 @@
-INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
+INSERT INTO webex21.ent_user (id,name,`role`,login,email) VALUES
 	 (1,'Deleted Users','user','deleted',NULL),
 	 (2,'Sergey Sosnovsky','admin','sergey','sosnovsky@gmail.com '),
 	 (3,'Peter Brusilovsky','admin','peterb','peterb@pitt.edu'),
@@ -9,7 +9,7 @@ INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
 	 (23,'Natalya','admin','ngoreva','goreva@rmu.edu'),
 	 (24,'Divyasheel','superuser','div',NULL),
 	 (25,'Banks Christopher','user','ncgn',NULL);
-INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
+INSERT INTO webex21.ent_user (id,name,`role`,login,email) VALUES
 	 (26,'Cross Patrick','user','lrtm',NULL),
 	 (27,'Detar Derek','user','lfmk',NULL),
 	 (28,'Dobosh Joshua','user','nhqn',NULL),
@@ -20,7 +20,7 @@ INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
 	 (33,'Ott Matthew','user','krnn',NULL),
 	 (34,'Straughters Jamal','user','yrqk',NULL),
 	 (35,'Danielle','superuser','suleehs',NULL);
-INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
+INSERT INTO webex21.ent_user (id,name,`role`,login,email) VALUES
 	 (36,'James Bowman','user','jbb18',NULL),
 	 (37,'Patric Campbell','user','pec16',NULL),
 	 (38,'Stephen Plumby','user','sfp8',NULL),
@@ -31,7 +31,7 @@ INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
 	 (43,'Ryan Johnston','user','rpj8',NULL),
 	 (44,'Michael Logoyda','user','mal87',NULL),
 	 (45,'Eric Napolitan','user','ecn4',NULL);
-INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
+INSERT INTO webex21.ent_user (id,name,`role`,login,email) VALUES
 	 (46,'Andres Pacheco','user','anp72',NULL),
 	 (47,'David Nawn','user','dtn4',NULL),
 	 (48,'Megan Patton','user','mjp58',NULL),
@@ -42,7 +42,7 @@ INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
 	 (53,'Aslam Mogri','user','akm16',NULL),
 	 (54,'Andrew Mowrey','user','asm27',NULL),
 	 (55,'Larry Werner','user','law55',NULL);
-INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
+INSERT INTO webex21.ent_user (id,name,`role`,login,email) VALUES
 	 (56,'Kieth Yackovich','user','kry7',NULL),
 	 (57,'Angela Zack','user','anz15',NULL),
 	 (59,'Julio Guerra','admin','dguerra','mallium@gmail.com '),
@@ -54,7 +54,7 @@ INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
 	 (65,'Teemu SirkiÃ¤				','user','teemu','teemu.sirkia@aalto.fi'),
 	 (66,'guest','user','guest',NULL),
 	 (67,'Artem Beaty','admin','arb148','arb148@pitt.edu');
-INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
+INSERT INTO webex21.ent_user (id,name,`role`,login,email) VALUES
 	 (68,'Sherry Sahebi','admin','ssahebi','shaghayegh.sahebi@gmail.com'),
 	 (69,'Hardik Vasa','superuser','hnvasa','hnv3@pitt.edu'),
 	 (70,'Python Teacher','admin','py.teacher','py.teacher@xxx.com'),
@@ -65,7 +65,7 @@ INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
 	 (75,'Unknown','user','unknown','unknown@xxx.com'),
 	 (76,'Jordan Barria','admin','jab464','jab464@pitt.edu'),
 	 (77,'Hung Kim Chau','admin','h.chau','hkc6@pitt.edu');
-INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
+INSERT INTO webex21.ent_user (id,name,`role`,login,email) VALUES
 	 (78,'Kamil Akhuseyinoglu','admin','akhuseyinoglu','cskamil@gmail.com'),
 	 (79,'Michelle Wang','user','michellewang','mxwang@ualberta.ca'),
 	 (80,'Lasang J. Tamang','user','ljtamang','ljtamang@memphis.edu'),
@@ -76,7 +76,7 @@ INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
 	 (85,'Suraj Maharjan','user','smharjan','smharjan@memphis.edu'),
 	 (86,'Zeyad Alshaikh','user','zlshaikh','zlshaikh@memphis.edu'),
 	 (87,'Hasan Mashrique','user','hmshrque','hmshrque@memphis.edu');
-INSERT INTO quizpet.ent_user (id,name,`role`,login,email) VALUES
+INSERT INTO webex21.ent_user (id,name,`role`,login,email) VALUES
 	 (88,'Carrie Demmans Epp','user','demmanse','demmanse@ualberta.ca'),
 	 (89,'Megan Flanders','user','mflanders','mflanders@ualberta.ca'),
 	 (90,'Geoff Hollis','user','hollis','hollis@ualberta.ca'),

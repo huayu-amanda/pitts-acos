@@ -399,7 +399,7 @@ app.all(urlPrefix, function(req, res, next) {
   // /quizpet-generator/api/quiz/:id as protocol=quizpet-generator, ...
   // If that happens, ACOS content handling returns "Unsupported request!".
   // Skip here and pass control to the dedicated quizpet-generator routes below.
-  if (req.params.protocol === 'quizpet-generator' || req.params.protocol === 'quizpet-generator-pitts') {
+  if (req.params.protocol === 'quizpet-generator') {
     return next();
   }
 

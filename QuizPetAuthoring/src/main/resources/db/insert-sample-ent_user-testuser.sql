@@ -5,7 +5,7 @@
 -- 2) Both testuser and adminuser use password: testpass
 -- 3) Run with: docker exec -i quizpet-mysql mariadb -uroot -prootpassword < insert-sample-ent_user-testuser.sql
 
-USE quizpet;
+USE webex21;
 
 -- Insert testuser (role: user)
 INSERT INTO `ent_user` (`id`, `login`, `password`, `name`, `role`)

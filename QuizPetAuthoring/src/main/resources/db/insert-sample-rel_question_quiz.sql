@@ -8,7 +8,7 @@
 --   Quiz 903 -> Topic 903 (stack)
 -- Run with: docker exec -i quizpet-mysql mariadb -uroot -prootpassword < insert-sample-rel_question_quiz-quizs.sql
 
-USE quizpet;
+USE webex21;
 
 INSERT INTO `rel_question_quiz` (`QuizID`, `QuestionID`)
 VALUES (900, 900)

@@ -8,13 +8,7 @@
 <p><strong>Source:</strong> {{ sourceLabel | default('Using local QuizPetAuthoring') }} (route: {{ routeBase | default('/quizpet-generator') }})</p>
 <div class="row" style="margin-bottom: 10px;">
   <div class="col-md-12">
-    {% if routeBase == '/quizpet-generator' %}
-      <span class="btn btn-primary btn-sm" style="cursor: default;">Using local QuizPetAuthoring</span>
-      <a class="btn btn-default btn-sm" href="/quizpet-generator-pitts" style="margin-left: 8px;">Using adapt2-pitt QuizPetAuthoring_Java</a>
-    {% else %}
-      <a class="btn btn-default btn-sm" href="/quizpet-generator">Using local QuizPetAuthoring</a>
-      <span class="btn btn-primary btn-sm" style="cursor: default; margin-left: 8px;">Using adapt2-pitt QuizPetAuthoring_Java</span>
-    {% endif %}
+    <span class="btn btn-primary btn-sm" style="cursor: default;">Using local QuizPetAuthoring</span>
   </div>
 </div>
 
@@ -100,7 +94,13 @@
     <div class="row" style="margin-top: 12px;">
       <div class="col-md-4">
         <label for="supportFilePickerInput" id="supportFilePickerLabel">Or choose support .py .java file</label>
-        <input id="supportFilePickerInput" class="form-control" type="file" accept=".py,.java,text/x-python,text/x-java-source,text/plain" />
+        <input id="supportFilePickerInput" type="file" accept=".py,.java,text/x-python,text/x-java-source,text/plain" style="position: absolute; left: -9999px; width: 1px; height: 1px;" />
+        <div class="input-group">
+          <span class="input-group-btn">
+            <button id="supportFilePickerBtn" class="btn btn-default" type="button">Choose File</button>
+          </span>
+          <input id="supportFilePickerDisplay" class="form-control" type="text" value="No file chosen" readonly />
+        </div>
       </div>
       <div class="col-md-8">
         <label for="supportFileContentInput" id="supportFileContentLabel">Support file content</label>
@@ -172,6 +172,8 @@
   var supportFileContentLabel = byId('supportFileContentLabel');
   var supportFileContentInput = byId('supportFileContentInput');
   var supportFilePickerInput = byId('supportFilePickerInput');
+  var supportFilePickerBtn = byId('supportFilePickerBtn');
+  var supportFilePickerDisplay = byId('supportFilePickerDisplay');
   var sourceLanguage = isPittsSource ? 'java' : 'python';
   var selectedSupportFileName = sourceLanguage === 'java' ? 'Stack.java' : 'stack.py';
 
@@ -230,6 +232,14 @@
       };
       reader.readAsText(file);
     });
+  }
+
+  function setSupportFilePickerDisplay(fileName) {
+    if (!supportFilePickerDisplay) {
+      return;
+    }
+    var displayName = String(fileName || '').trim();
+    supportFilePickerDisplay.value = displayName || 'No file chosen';
   }
 
   function cleanQuizTitle(rawTitle, fallback) {
@@ -374,6 +384,12 @@
     }
     if (supportFilePickerLabel) {
       supportFilePickerLabel.textContent = 'Or choose support .py .java file';
+    }
+    if (supportFilePickerBtn) {
+      supportFilePickerBtn.textContent = 'Choose File';
+    }
+    if (!supportFilePickerInput || !(supportFilePickerInput.files && supportFilePickerInput.files.length)) {
+      setSupportFilePickerDisplay('');
     }
     if (supportFileContentLabel) {
       supportFileContentLabel.textContent = 'Support file content';
@@ -625,11 +641,20 @@
     applyQuizIdModeByInput(parseQuizId(quizIdInput.value));
   });
 
+  if (supportFilePickerBtn && supportFilePickerInput) {
+    supportFilePickerBtn.addEventListener('click', function() {
+      supportFilePickerInput.click();
+    });
+  }
+
   supportFilePickerInput.addEventListener('change', function() {
     var file = supportFilePickerInput.files && supportFilePickerInput.files[0];
     if (!file) {
+      setSupportFilePickerDisplay('');
       return;
     }
+
+    setSupportFilePickerDisplay(file.name || '');
 
     selectedSupportFileName = normalizeSupportFileName(file.name || selectedSupportFileName, sourceLanguage);
 
@@ -755,6 +780,7 @@
   });
 
   clearQuizIdOptions();
+  setSupportFilePickerDisplay('');
   applyLanguageUI(sourceLanguage);
   if (isPittsSource) {
     // adapt2 page is forced to Quiz ID mode by design.

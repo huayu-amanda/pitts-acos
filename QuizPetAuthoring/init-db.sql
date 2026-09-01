@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS `portal_test2`.`ent_user` (
 	`login` VARCHAR(100) DEFAULT NULL,
 	`password` VARCHAR(255),
 	`name` VARCHAR(255),
+	`email` VARCHAR(255) DEFAULT NULL,
 	`role` VARCHAR(50),
 	PRIMARY KEY (`id`),
 	UNIQUE KEY `uk_login` (`login`)
@@ -35,6 +36,11 @@ CREATE TABLE IF NOT EXISTS `um2`.`ent_user` LIKE `portal_test2`.`ent_user`;
 CREATE TABLE IF NOT EXISTS `aggregate`.`ent_user` LIKE `portal_test2`.`ent_user`;
 CREATE TABLE IF NOT EXISTS `webex21`.`ent_user` LIKE `portal_test2`.`ent_user`;
 CREATE TABLE IF NOT EXISTS `quizpet`.`ent_user` LIKE `portal_test2`.`ent_user`;
+ALTER TABLE `portal_test2`.`ent_user` ADD COLUMN IF NOT EXISTS `email` VARCHAR(255) DEFAULT NULL;
+ALTER TABLE `um2`.`ent_user` ADD COLUMN IF NOT EXISTS `email` VARCHAR(255) DEFAULT NULL;
+ALTER TABLE `aggregate`.`ent_user` ADD COLUMN IF NOT EXISTS `email` VARCHAR(255) DEFAULT NULL;
+ALTER TABLE `webex21`.`ent_user` ADD COLUMN IF NOT EXISTS `email` VARCHAR(255) DEFAULT NULL;
+ALTER TABLE `quizpet`.`ent_user` ADD COLUMN IF NOT EXISTS `email` VARCHAR(255) DEFAULT NULL;
 
 -- ent_jquestion
 CREATE TABLE IF NOT EXISTS `portal_test2`.`ent_jquestion` (

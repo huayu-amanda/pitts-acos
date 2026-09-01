@@ -1,4 +1,4 @@
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (15,1),
 	 (15,2),
 	 (3,6),
@@ -9,7 +9,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (2,59),
 	 (2,60),
 	 (2,61);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (16,62),
 	 (16,63),
 	 (16,64),
@@ -20,7 +20,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (17,75),
 	 (17,76),
 	 (17,77);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (17,78),
 	 (18,79),
 	 (18,80),
@@ -31,7 +31,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (7,85),
 	 (5,86),
 	 (9,87);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (6,88),
 	 (6,89),
 	 (19,90),
@@ -42,7 +42,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (22,95),
 	 (20,96),
 	 (19,97);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (18,98),
 	 (19,99),
 	 (6,100),
@@ -53,7 +53,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (5,105),
 	 (5,106),
 	 (5,107);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (5,108),
 	 (9,109),
 	 (22,110),
@@ -64,7 +64,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (1,115),
 	 (1,116),
 	 (24,117);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (24,118),
 	 (24,119),
 	 (24,120),
@@ -75,7 +75,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (3,125),
 	 (3,126),
 	 (4,127);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (4,128),
 	 (6,129),
 	 (9,130),
@@ -86,7 +86,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (8,135),
 	 (2,136),
 	 (15,138);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (21,139),
 	 (21,141),
 	 (25,144),
@@ -97,7 +97,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (25,149),
 	 (26,150),
 	 (26,151);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (26,152),
 	 (26,153),
 	 (26,154),
@@ -108,7 +108,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (27,159),
 	 (4,160),
 	 (4,161);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (4,162),
 	 (21,163),
 	 (20,164),
@@ -119,7 +119,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (2,170),
 	 (30,172),
 	 (1,173);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (1,174),
 	 (1,175),
 	 (8,177),
@@ -130,7 +130,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (20,182),
 	 (20,183),
 	 (20,184);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (20,185),
 	 (20,186),
 	 (20,187),
@@ -141,7 +141,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (20,192),
 	 (20,193),
 	 (20,194);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (5,195),
 	 (5,196),
 	 (5,197),
@@ -152,7 +152,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (5,202),
 	 (5,203),
 	 (19,204);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (28,205),
 	 (20,206),
 	 (20,207),
@@ -163,7 +163,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (20,212),
 	 (1,213),
 	 (1,214);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (1,215),
 	 (28,216),
 	 (1,217),
@@ -174,7 +174,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (1,228),
 	 (1,229),
 	 (5,230);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (5,231),
 	 (5,232),
 	 (5,233),
@@ -185,7 +185,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (8,239),
 	 (8,240),
 	 (8,241);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (8,242),
 	 (8,243),
 	 (8,244),
@@ -196,7 +196,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (3,250),
 	 (6,251),
 	 (7,253);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (5,254),
 	 (2,255),
 	 (39,256),
@@ -207,7 +207,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (41,261),
 	 (41,262),
 	 (42,263);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (42,264),
 	 (42,265),
 	 (43,266),
@@ -218,7 +218,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (44,271),
 	 (45,272),
 	 (45,273);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (45,274),
 	 (45,275),
 	 (45,276),
@@ -229,7 +229,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (48,281),
 	 (48,282),
 	 (39,285);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (39,286),
 	 (40,287),
 	 (40,288),
@@ -240,7 +240,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (50,293),
 	 (50,294),
 	 (50,295);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (51,296),
 	 (51,297),
 	 (58,298),
@@ -251,7 +251,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (48,303),
 	 (48,304),
 	 (54,307);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (54,308),
 	 (54,309),
 	 (54,310),
@@ -262,7 +262,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (57,327),
 	 (57,328),
 	 (58,329);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (46,330),
 	 (46,331),
 	 (59,332),
@@ -273,7 +273,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (48,338),
 	 (48,339),
 	 (61,340);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (61,341),
 	 (48,342),
 	 (48,343),
@@ -284,7 +284,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (64,348),
 	 (64,349),
 	 (65,350);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (46,351),
 	 (65,352),
 	 (65,353),
@@ -295,7 +295,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (66,358),
 	 (66,359),
 	 (66,360);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (43,362),
 	 (43,363),
 	 (43,364),
@@ -306,7 +306,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (67,369),
 	 (68,370),
 	 (68,371);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (69,372),
 	 (69,373),
 	 (65,374),
@@ -317,7 +317,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (44,379),
 	 (77,396),
 	 (78,403);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (80,404),
 	 (81,405),
 	 (82,406),
@@ -328,7 +328,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,411),
 	 (84,412),
 	 (84,413);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,414),
 	 (84,416),
 	 (84,417),
@@ -339,7 +339,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,422),
 	 (84,423),
 	 (84,424);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,425),
 	 (84,426),
 	 (84,427),
@@ -350,7 +350,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,432),
 	 (84,433),
 	 (84,434);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,435),
 	 (84,436),
 	 (84,437),
@@ -361,7 +361,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,442),
 	 (84,443),
 	 (84,444);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,445),
 	 (84,446),
 	 (84,447),
@@ -372,7 +372,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,452),
 	 (84,453),
 	 (84,454);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,465),
 	 (84,466),
 	 (84,467),
@@ -383,7 +383,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,477),
 	 (84,478),
 	 (84,479);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,481),
 	 (84,482),
 	 (84,483),
@@ -394,7 +394,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,489),
 	 (84,490),
 	 (84,491);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,492),
 	 (84,493),
 	 (84,494),
@@ -405,7 +405,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,499),
 	 (84,500),
 	 (84,501);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,505),
 	 (84,506),
 	 (84,515),
@@ -416,7 +416,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,520),
 	 (84,521),
 	 (84,522);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (84,523),
 	 (84,524),
 	 (84,525),
@@ -427,7 +427,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (86,532),
 	 (86,533),
 	 (86,534);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (88,535),
 	 (85,540),
 	 (88,541),
@@ -438,7 +438,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (88,546),
 	 (88,547),
 	 (86,548);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (86,549),
 	 (86,550),
 	 (67,551),
@@ -449,7 +449,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (88,556),
 	 (88,557),
 	 (88,558);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (88,559),
 	 (88,560),
 	 (88,561),
@@ -460,7 +460,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (88,566),
 	 (88,567),
 	 (88,568);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (88,569),
 	 (86,570),
 	 (86,571),
@@ -471,7 +471,7 @@ INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (86,576),
 	 (86,577),
 	 (90,578);
-INSERT INTO quizpet.rel_question_quiz (QuestionID,QuizID) VALUES
+INSERT INTO webex21.rel_question_quiz (QuestionID,QuizID) VALUES
 	 (90,579),
 	 (90,580),
 	 (90,581),

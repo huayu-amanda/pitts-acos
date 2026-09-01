@@ -194,11 +194,17 @@ const JSTracing = {
       sessionData.expectedResult = "";
       sessionData.verdict = "";
 
-      // 3. Read the HTML body template from the flattened static layout.
-      const htmlPath = path.join(__dirname, "..", "..", "static", "body.html");
+      // 3. Read the HTML body template. Prefer current layout and keep legacy fallback.
+      const htmlPathCandidates = [
+        path.join(__dirname, "static", "body.html"),
+        path.join(__dirname, "..", "..", "static", "body.html")
+      ];
+      const htmlPath = htmlPathCandidates.find(function(candidate) {
+        return fs.existsSync(candidate);
+      });
 
-      if (!fs.existsSync(htmlPath)) {
-        console.error("[jstracing] ERROR: body.html not found:", htmlPath);
+      if (!htmlPath) {
+        console.error("[jstracing] ERROR: body.html not found in candidates:", htmlPathCandidates);
         params.error = true;
         return cb();
       }

@@ -6,37 +6,36 @@ FROM node:18-bullseye
 ARG APP_DIR=/usr/src/app
 WORKDIR ${APP_DIR}
 
-#2 [Environment-specific - keep only if needed]
-# Purpose: when acos-server needs to access an external QuizPet source over HTTPS
-# (for example, adapt2), these CA files help avoid TLS verification failures.
-# If the target environment already has a complete CA chain configured at system level,
-# or does not access that external source, this block can be removed.
-COPY ./acos-server/certs/InCommonRSAServerCA2.pem /usr/local/share/ca-certificates/InCommonRSAServerCA2.crt
-COPY ./acos-server/certs/USERTrustRSAAAACA.pem /usr/local/share/ca-certificates/USERTrustRSAAAACA.crt
-COPY ./acos-server/certs/adapt2-extra-ca.pem ${APP_DIR}/certs/adapt2-extra-ca.pem
-RUN update-ca-certificates
-ENV NODE_EXTRA_CA_CERTS=${APP_DIR}/certs/adapt2-extra-ca.pem
-
-#3 [Optional - typically already present] Copy acos-server code (including package*.json)
+#2 [Optional - typically already present] Copy acos-server code (including package*.json)
 # If an equivalent COPY step already exists in the target Dockerfile,
 # keep the existing implementation and do not duplicate it.
 COPY ./acos-server ${APP_DIR}
 
-#4 [Optional - typically already present] Install base acos-server dependencies
+#3 [Optional - typically already present] Install base acos-server dependencies
 # If an equivalent dependency install step already exists (npm/yarn/pnpm),
 # do not duplicate it.
 RUN npm install
 
-#5 [Required] Install the jstracing custom content type added in this integration
+#4 [Required] Install the jstracing custom content type added in this integration
 # For pitts-quizpet-acos integration
 COPY ./acos-jstracing ${APP_DIR}/acos-jstracing
 RUN npm install ./acos-jstracing
 
-#6 [Required] Install quizpet-generator as an ACOS tool package
+# Optional Java compiler runtime asset for CheerpJ Java mode.
+# Put host file at deploy/ec2/assets/tools.jar before build to enable live Java compile.
+COPY ./deploy/ec2/assets ${APP_DIR}/deploy-assets
+RUN if [ -f "${APP_DIR}/deploy-assets/tools.jar" ]; then \
+			cp "${APP_DIR}/deploy-assets/tools.jar" "${APP_DIR}/tools.jar" && \
+			echo "[acos-server image] tools.jar installed at ${APP_DIR}/tools.jar"; \
+		else \
+			echo "[acos-server image] WARN: tools.jar not found at deploy/ec2/assets/tools.jar; Java compile will be unavailable."; \
+		fi
+
+#5 [Required] Install quizpet-generator as an ACOS tool package
 COPY ./acos-quizpet-generator-tool ${APP_DIR}/acos-quizpet-generator-tool
 RUN npm install ./acos-quizpet-generator-tool
 
-#7 [Optional - typically already present] Expose service port and start command
+#6 [Optional - typically already present] Expose service port and start command
 # If the target setup already defines port and startup conventions,
 # keep those existing settings.
 EXPOSE 3000
