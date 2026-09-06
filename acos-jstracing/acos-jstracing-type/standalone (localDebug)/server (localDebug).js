@@ -1,5 +1,23 @@
 "use strict";
 
+/**
+ * Standalone JSTracing dev server (local debugging only).
+ *
+ * What this file does:
+ * 1) Boots a lightweight Express app without the full ACOS stack.
+ * 2) Registers jstracing via the root acos-jstracing entry, which in turn
+ *    registers the content type and bundled content packages.
+ * 3) Serves jstracing static assets under /static/jstracing.
+ * 4) Exposes exercise rendering route:
+ *      GET /html/jstracing/:contentPackage/:name
+ * 5) Exposes event route for frontend callbacks (e.g. saveSession/grade):
+ *      POST /html/jstracing/:contentPackage/:name/event
+ *
+ * Note:
+ * - Used by npm dev/start in acos-jstracing for local iteration.
+ * - Production/system deployment path uses acos-server/app.js as the main host.
+ */
+
 const path = require("path");
 const express = require("express");
 

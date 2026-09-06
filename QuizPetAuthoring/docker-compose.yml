@@ -1,4 +1,7 @@
 version: '3.8'
+# Note: Use this compose file only when you intentionally run a separate
+# standalone QuizPetAuthoring test environment. Change container names and
+# host ports to avoid conflicts with the main deploy/ec2 stack.
 services:
   mysql:
     image: mariadb:10.5

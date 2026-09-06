@@ -8,9 +8,9 @@
     "prepare": "node acos-jstracing-type/scripts/sync-static.js",
     "postinstall": "node acos-jstracing-type/scripts/sync-static.js",
     "predev": "npm run sync-static",
-    "dev": "node acos-jstracing-type/standalone/server.js",
     "prestart": "npm run sync-static",
-    "start": "node acos-jstracing-type/standalone/server.js",
+    "dev": "node -e \"console.error('Standalone server has been removed. Start the host ACOS server instead.'); process.exit(1)\"",
+    "start": "node -e \"console.error('Standalone server has been removed. Start the host ACOS server instead.'); process.exit(1)\"",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "devDependencies": {
@@ -25,8 +25,8 @@
     "README.md"
   ],
   "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "author": "Hua Yu",
+  "license": "MIT",
   "acos": {
     "type": "content-type"
   },

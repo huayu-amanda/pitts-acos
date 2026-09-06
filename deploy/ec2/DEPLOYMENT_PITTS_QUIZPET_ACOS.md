@@ -79,8 +79,8 @@ Note: this checklist targets the existing `acos-server` code repository. The ass
 
 ### 4.1 Required New Files (Add directly with the same filenames)
 
-1. `acos-server/routes/quizpet-generator.js`
-- Purpose: provides the `quizpet-generator` page and APIs (topics/search/load/import).
+1. `acos-quizpet-generator-tool/routes/quizpet-generator.js`
+- Purpose: provides the active `quizpet-generator` page and APIs (topics/search/load/import).
 
 2. `acos-server/services/quizpet-generator-service.js`
 - Purpose: encapsulates QuizPet quiz-loading logic, language detection, and response normalization.
