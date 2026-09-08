@@ -37,15 +37,15 @@
     </div>
 </div>
 
-<!-- 由后端注入练习数据：runtime.js 中用 EXERCISE_JSON 替换 -->
+<!-- Exercise data is injected by runtime.js through placeholder replacement. -->
 <script>
   window.JSTRACING_ASSET_VERSION = "20260420-mainthread-cheerpj-1";
-  // 这里的 {{EXERCISE_JSON}} 会在服务器端被替换为一个 JSON 字符串，
-  // 例如：{"title":"...","description":"..."}
-  // 注意：不要给它再加引号，后端已经做了 JSON.stringify。
+  // The server replaces {{EXERCISE_JSON}} with a JSON value.
+  // Do not add quotes; the server already applies JSON.stringify().
   window.JSTRACING_EXERCISE = {{EXERCISE_JSON}};
   window.JSTRACING_SESSION = {{SESSION_JSON}};
   window.JSTRACING_META = {{META_JSON}};
+  window.JSTRACING_SERVER_CONFIG = {{RUNTIME_CONFIG_JSON}};
 </script>
 
 <!-- Centralized runtime config (Python keeps using this) -->
@@ -68,5 +68,5 @@
   <div id="cheerpjDisplay"></div>
 </div>
 
-<!-- 前端逻辑脚本（使用 window.JSTRACING_EXERCISE） -->
+<!-- Frontend logic that consumes window.JSTRACING_EXERCISE. -->
 <script src="/static/jstracing/js/jstracing.js?v=20260420-mainthread-cheerpj-1"></script>

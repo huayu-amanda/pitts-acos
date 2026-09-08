@@ -252,6 +252,9 @@ const JSTracing = {
             contentPackage: contentPackageId,
             exerciseName: exerciseName,
           }));
+          html = html.split("{{RUNTIME_CONFIG_JSON}}").join(JSON.stringify({
+            cheerpjRuntimeBaseUrl: process.env.CHEERPJ_RUNTIME_BASE_URL || "https://cjrtnc.leaningtech.com/4.3/"
+          }).replace(/</g, "\\u003c"));
 
           // 5. Put the generated HTML into bodyContent for ACOS to render
           params.bodyContent = html;

@@ -1,0 +1,107 @@
+services:
+  # Optional reverse proxy for QuizPetAuthoring.
+  # Disabled here because this compose currently focuses on direct Tomcat access.
+  # nginx:
+  #   image: nginx:1.27-alpine
+  #   container_name: quizpet-nginx
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - acos-server\
+  #     - quizpet-tomcat
+  #   ports:
+  #     - "80:80"
+  #   volumes:
+  #     - ./nginx.conf:/etc/nginx/conf.d/default.conf
+
+  quizpet-mysql:
+    build:
+      context: ../..
+      dockerfile: deploy/ec2/mariadb/Dockerfile
+    image: quizpet-mariadb:10.5-init
+    container_name: quizpet-mysql
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    # Keep DB off the public internet; use SSH/SSM port-forward when you need access.
+    ports:
+      - "127.0.0.1:3306:3306"
+
+  quizpet-tomcat:
+    build:
+      context: ../../QuizPetAuthoring
+      dockerfile: Dockerfile.ec2
+    image: quizpet-tomcat:ec2
+    container_name: quizpet-tomcat
+    restart: unless-stopped
+    depends_on:
+      - quizpet-mysql
+    environment:
+      - CATALINA_OPTS=-Djava.security.egd=file:/dev/./urandom
+
+    # Scenario 1 (enabled):
+    # ACOS runs directly on the host machine as a normal process.
+    # In that case, ACOS should call QuizPetAuthoring through:
+    #   http://localhost:18080/quizpet
+    # The port is bound to 127.0.0.1 so it is reachable only from the host,
+    # not from other machines on the network.
+    ports:
+      - "127.0.0.1:18080:8080"
+
+    # Scenario 2 (disabled):
+    # ACOS runs in another Docker container, not on the host directly.
+    # In that case, ACOS should usually call:
+    #   http://host.docker.internal:18080/quizpet
+    # To use this mode, comment out the Scenario 1 mapping above,
+    # then uncomment the two lines below.
+    # On Linux, the ACOS container may also need:
+    #   extra_hosts:
+    #     - "host.docker.internal:host-gateway"
+    # ports:
+    #   - "18080:8080"
+
+
+  # acos-server:
+  #   build:
+  #     context: ../..
+  #     dockerfile: acos-server/Dockerfile
+  #   image: acos-server:local
+  #   container_name: acos-server
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - quizpet-tomcat
+  #   env_file:
+  #     - ./.env
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     NODE_ENV: production
+  #     LTI_CONSUMER_KEY: ${LTI_CONSUMER_KEY:-acos}
+  #     LTI_CONSUMER_SECRET: ${LTI_CONSUMER_SECRET:-acos}
+  #     # Runtime-selectable QuizPet endpoint and credentials.
+  #     # Defaults target the local quizpet-tomcat service in this compose network.
+  #     QUIZPET_BASE_URL: ${QUIZPET_BASE_URL:-http://quizpet-tomcat:8080/quizpet}
+  #     QUIZPET_USERNAME: ${QUIZPET_USERNAME:-testuser}
+  #     QUIZPET_PASSWORD: ${QUIZPET_PASSWORD:-testpass}
+  #     # Dual-source generator configs (both pages can coexist):
+  #     # /quizpet-generator       -> *_LOCAL (uses *_ADMIN credentials)
+  #     # /quizpet-generator-pitts -> *_PITTS
+  #     QUIZPET_BASE_URL_LOCAL: ${QUIZPET_BASE_URL_LOCAL:-http://quizpet-tomcat:8080/quizpet}
+  #     QUIZPET_USERNAME_LOCAL: ${QUIZPET_USERNAME_LOCAL:-}
+  #     QUIZPET_PASSWORD_LOCAL: ${QUIZPET_PASSWORD_LOCAL:-}
+  #     QUIZPET_BASE_URL_PITTS: ${QUIZPET_BASE_URL_PITTS:-https://adapt2.sis.pitt.edu/quizpet_authoring}
+  #     QUIZPET_USERNAME_PITTS: ${QUIZPET_USERNAME_PITTS:-adl01}
+  #     QUIZPET_PASSWORD_PITTS: ${QUIZPET_PASSWORD_PITTS:-adl01}
+  #     # Admin and student account configs (load from env file):
+  #     # /quizpet-generator uses adminuser for quiz authoring/loading
+  #     # Student quiz pages (/html/jstracing/*) use testuser as default
+  #     QUIZPET_USERNAME_ADMIN: ${QUIZPET_USERNAME_ADMIN:-testuser}
+  #     QUIZPET_PASSWORD_ADMIN: ${QUIZPET_PASSWORD_ADMIN:-testpass}
+  #     QUIZPET_USERNAME_STUDENT: ${QUIZPET_USERNAME_STUDENT:-testuser}
+  #     QUIZPET_PASSWORD_STUDENT: ${QUIZPET_PASSWORD_STUDENT:-testpass}
+  #     # Optional: make generated URLs point to your public IP (recommended when using nginx on port 80)
+  #     # SERVER_ADDRESS: http://<EC2_PUBLIC_IP>/
+
+volumes:
+  mysql-data:

@@ -24,12 +24,9 @@ RUN npm install ./acos-jstracing
 # Optional Java compiler runtime asset for CheerpJ Java mode.
 # Put host file at deploy/ec2/assets/tools.jar before build to enable live Java compile.
 COPY ./deploy/ec2/assets ${APP_DIR}/deploy-assets
-RUN if [ -f "${APP_DIR}/deploy-assets/tools.jar" ]; then \
-			cp "${APP_DIR}/deploy-assets/tools.jar" "${APP_DIR}/tools.jar" && \
-			echo "[acos-server image] tools.jar installed at ${APP_DIR}/tools.jar"; \
-		else \
-			echo "[acos-server image] WARN: tools.jar not found at deploy/ec2/assets/tools.jar; Java compile will be unavailable."; \
-		fi
+ENV JSTRACING_TOOLS_JAR_PATH=${APP_DIR}/deploy-assets/tools.jar \
+    CHEERPJ_RUNTIME_BASE_URL=https://cjrtnc.leaningtech.com/4.3/ \
+    CHEERPJ_SELF_HOST_DIR=${APP_DIR}/deploy-assets/cheerpj/4.3
 
 #5 [Required] Install quizpet-generator as an ACOS tool package
 COPY ./acos-quizpet-generator-tool ${APP_DIR}/acos-quizpet-generator-tool

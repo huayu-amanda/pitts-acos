@@ -4,7 +4,8 @@
   const meta = window.JSTRACING_META || {};
   const runtime = window.JSTRACING_RUNTIME || {};
   const runtimePyodide = runtime.pyodide || {};
-  const CHEERPJ_LOADER_URL = "https://cjrtnc.leaningtech.com/4.2/loader.js";
+  const runtimeCheerpj = runtime.cheerpj || {};
+  const CHEERPJ_LOADER_URL = runtimeCheerpj.scriptURL || "https://cjrtnc.leaningtech.com/4.3/loader.js";
   const DEFAULT_JAVA_TIMEOUT_MS = 20000;
 
   const titleEl = document.getElementById("exercise-title");

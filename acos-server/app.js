@@ -394,15 +394,6 @@ app.use('/api/v1', api);
 var urlPrefix = '/:protocol([a-zA-Z0-9_-]+)/:contentType([a-zA-Z0-9_-]+)/:contentPackage([a-zA-Z0-9_-]+)/:name([a-zA-Z0-9_-]+)';
 app.all(urlPrefix, function(req, res, next) {
 
-  // For pitts-quizpet-acos integration
-  // This generic 4-segment matcher can also match tool paths like
-  // /quizpet-generator/api/quiz/:id as protocol=quizpet-generator, ...
-  // If that happens, ACOS content handling returns "Unsupported request!".
-  // Skip here and pass control to the dedicated quizpet-generator routes below.
-  if (req.params.protocol === 'quizpet-generator') {
-    return next();
-  }
-
   if (handlers.protocols[req.params.protocol] && handlers.contentTypes[req.params.contentType] && handlers.contentPackages[req.params.contentPackage]) {
 
     var params = {
