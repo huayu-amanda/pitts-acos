@@ -1,4 +1,7 @@
 services:
+  # This compose file is for the integrated ACOS server environment only.
+  # It is not the standalone QuizPetAuthoring stack.
+  # Use this file when running acos-server + quizpet-tomcat + quizpet-mysql together.
   # EC2 reverse proxy is disabled for local Docker usage.
   # nginx:
   #   image: nginx:1.27-alpine

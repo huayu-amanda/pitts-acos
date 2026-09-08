@@ -1,7 +1,9 @@
 version: '3.8'
-# Note: Use this compose file only when you intentionally run a separate
-# standalone QuizPetAuthoring test environment. Change container names and
-# host ports to avoid conflicts with the main deploy/ec2 stack.
+# Standalone-only compose file for QuizPetAuthoring (independent from acos-server).
+# Do not use this file for the integrated acos-server deployment.
+# Current runtime behavior is not fully verified; use with caution.
+# Change container names and host ports to avoid conflicts with the main
+# deploy/ec2 integrated stack.
 services:
   mysql:
     image: mariadb:10.5
