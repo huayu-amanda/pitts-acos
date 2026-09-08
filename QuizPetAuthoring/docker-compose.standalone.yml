@@ -17,15 +17,15 @@ services:
 
   tomcat:
     build:
-      context: .              # 使用当前目录
-      dockerfile: Dockerfile  # 使用你马上要创建的 Dockerfile
-    image: tomcat:9.0-jdk8
+      context: .             
+      dockerfile: Dockerfile.standalone
+    image: quizpet-authoring-tomcat:local
     container_name: quizpet-tomcat
     restart: unless-stopped
     depends_on:
       - mysql
     ports:
-      - "8080:8080"
+      - "18080:8080"
     # No host mount for webapps to avoid permission issues; copy WAR into container instead.
     environment:
       - CATALINA_OPTS=-Djava.security.egd=file:/dev/./urandom

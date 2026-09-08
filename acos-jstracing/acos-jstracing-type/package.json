@@ -2,7 +2,8 @@
   "name": "acos-jstracing-type",
   "version": "1.0.0",
   "main": "index.js",
-  "license": "ISC",
+  "author": "Hua Yu",
+  "license": "MIT",
   "packageType": "content-type",
   "namespace": "jstracing"
 }
