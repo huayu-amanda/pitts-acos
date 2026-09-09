@@ -1,6 +1,6 @@
 # acos-jstracing
 
-In this repository, `acos-jstracing` is both an **ACOS content-type module** and a **standalone npm project** for convenient UI and Pyodide debugging.
+In this repository, `acos-jstracing` is an **ACOS content-type module** consumed by `acos-server`.
 
 ## Development Conventions (Type-centered Layout)
 
@@ -14,27 +14,24 @@ Runtime assets are now centralized under:
 - `acos-jstracing-type/static/js/jstracing.js`
 - `acos-jstracing-type/static/js/runtime-config.js`
 
-Before `npm run dev/start`, this project validates static asset presence:
+Before packaging or startup, this project validates static asset presence:
 
 ```bash
 npm run sync-static
 ```
 
-## Standalone Run (Without Docker)
+## Runtime Mode
 
-From the `acos-jstracing/` directory:
+Standalone server scripts were removed. `npm run dev` and `npm run start` intentionally exit with an error and message:
 
-```bash
-npm install
-npm run dev
+```text
+Standalone server has been removed. Start the host ACOS server instead.
 ```
 
-- Default port: `3030` (override with environment variable `PORT`)
-- Open: `http://localhost:3030/`
-- Exercise page URL format is consistent with `acos-server`:
-  - `http://localhost:3030/html/jstracing/jstracing-python/sample_quiz`
+Run through `acos-server` (typically via `deploy/ec2/docker-compose.yml`) and open pages under:
 
-After running, `<exercise>.session.json` is generated/updated under `acos-jstracing-python/` (for example, `sample_quiz.session.json`).
+- `http://localhost:3000/html/jstracing/jstracing-python/<exercise>`
+- `http://localhost:3000/html/jstracing/jstracing-java/<exercise>`
 
 ## Embed Into acos-server (As a Module)
 
@@ -78,8 +75,9 @@ So when installed as a dependency in `acos-server`, these development dependenci
 
 ## URL Compatibility
 
-The standalone server and `acos-server` use the same route scheme:
+Route scheme used by `acos-server`:
 - 页面：`/html/jstracing/:contentPackage/:name`
 - 事件：`POST /html/jstracing/:contentPackage/:name/event`
 
-This means UI behavior validated in standalone usually works in `acos-server` without frontend changes.
+CheerpJ runtime is remote-first by default. Configure `CHEERPJ_RUNTIME_BASE_URL` to set runtime source.
+Optional local self-host fallback is controlled by `CHEERPJ_DISABLE_SELF_HOST` (`true` by default).

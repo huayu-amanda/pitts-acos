@@ -162,6 +162,51 @@ docker compose down
 docker compose up -d --build --remove-orphans
 ```
 
+## 6.1 Existing ACOS Incremental Go-Live (Optional)
+
+Use this flow when your target environment already runs ACOS and you only want to roll out incremental changes from this project.
+
+1. Pre-go-live checks:
+- Back up current image tags, container names, and environment files.
+- If deployment is Git-managed, create a rollback tag:
+
+```bash
+git tag before-pitts-quizpet-acos-$(date +%Y%m%d-%H%M)
+```
+
+- Confirm port/network policy (recommended):
+	- ACOS external port: 3000 (or 80/443 behind reverse proxy)
+	- MariaDB: bind loopback only (`127.0.0.1:3306`)
+	- `quizpet-tomcat`: internal service unless direct exposure is required
+
+2. Incremental release order:
+- Release `acos-server` changes first:
+
+```bash
+cd deploy/ec2
+docker compose up -d --build acos-server
+```
+
+- Import/refresh DB schema and seed data (Section 4).
+- Rebuild QuizPet backend only if `QuizPetAuthoring` or `deploy/ec2/mariadb/Dockerfile` changed:
+
+```bash
+cd deploy/ec2
+docker compose up -d --build quizpet-mysql quizpet-tomcat
+```
+
+3. Environment variable updates (only if changed):
+- `QUIZPET_BASE_URL`
+- `QUIZPET_USERNAME_ADMIN` / `QUIZPET_PASSWORD_ADMIN`
+- `QUIZPET_USERNAME_STUDENT` / `QUIZPET_PASSWORD_STUDENT`
+- `MYSQL_ROOT_PASSWORD`
+
+4. Runtime validation:
+- `/<host>/quizpet-generator`
+- `/<host>/quizpet-generator/api/topics`
+- `/<host>/html/jstracing/jstracing-python/sample_quiz`
+- `/<host>/html/jstracing/jstracing-java/sample_quiz`
+
 ## 7. FAQ
 
 ### 7.1 Why do pages still look old after code changes?
@@ -201,9 +246,9 @@ Comment:
 ### 8.2 New Top-Level Components
 
 Added:
-- `acos-jstracing/packages/acos-jstracing-type/`
-- `acos-jstracing/packages/acos-jstracing-python/`
-- `acos-jstracing/packages/acos-jstracing-java/`
+- `acos-jstracing/acos-jstracing-type/`
+- `acos-jstracing/acos-jstracing-python/`
+- `acos-jstracing/acos-jstracing-java/`
 - `acos-quizpet-generator-tool/`
 
 Comment:
@@ -214,12 +259,10 @@ Comment:
 1. Content-type package created
 
 Added:
-- `acos-jstracing/packages/acos-jstracing-type/index.js`
-- `acos-jstracing/packages/acos-jstracing-type/package.json`
-- `acos-jstracing/packages/acos-jstracing-type/lib/jstracing/index.js`
-- `acos-jstracing/packages/acos-jstracing-type/lib/jstracing/fetch_quiz.js`
-- `acos-jstracing/packages/acos-jstracing-type/lib/jstracing/frontend/*`
-- `acos-jstracing/packages/acos-jstracing-type/static/*`
+- `acos-jstracing/acos-jstracing-type/index.js`
+- `acos-jstracing/acos-jstracing-type/package.json`
+- `acos-jstracing/acos-jstracing-type/fetch-quiz.js`
+- `acos-jstracing/acos-jstracing-type/static/*`
 
 Comment:
 - `index.js` in this package only performs content-type registration and static/tooling mount responsibilities.
@@ -227,10 +270,10 @@ Comment:
 2. Python content package separated
 
 Added:
-- `acos-jstracing/packages/acos-jstracing-python/index.js`
-- `acos-jstracing/packages/acos-jstracing-python/package.json`
-- `acos-jstracing/packages/acos-jstracing-python/manifest.json`
-- `acos-jstracing/packages/acos-jstracing-python/exercises/*.json`
+- `acos-jstracing/acos-jstracing-python/index.js`
+- `acos-jstracing/acos-jstracing-python/package.json`
+- `acos-jstracing/acos-jstracing-python/manifest.json`
+- `acos-jstracing/acos-jstracing-python/exercises/*.json`
 
 Comment:
 - This package reads its own `manifest.json`, constructs `meta.contents`, and registers itself into `handlers.contentPackages`.
@@ -238,10 +281,10 @@ Comment:
 3. Java content package separated
 
 Added:
-- `acos-jstracing/packages/acos-jstracing-java/index.js`
-- `acos-jstracing/packages/acos-jstracing-java/package.json`
-- `acos-jstracing/packages/acos-jstracing-java/manifest.json`
-- `acos-jstracing/packages/acos-jstracing-java/exercises/*.json`
+- `acos-jstracing/acos-jstracing-java/index.js`
+- `acos-jstracing/acos-jstracing-java/package.json`
+- `acos-jstracing/acos-jstracing-java/manifest.json`
+- `acos-jstracing/acos-jstracing-java/exercises/*.json`
 
 Comment:
 - Java package registration mirrors Python package behavior and keeps language-specific content ownership local.
@@ -249,7 +292,7 @@ Comment:
 4. Root jstracing entrypoint converted to orchestrator
 
 Updated:
-- `acos-jstracing/lib/index.js`
+- `acos-jstracing/index.js`
 
 Before:
 - One file handled content-type registration and both content-package registrations.
@@ -269,7 +312,7 @@ Updated:
 - `acos-jstracing/package.json`
 
 Change:
-- Added `packages/` to the `files` list.
+- Added `acos-jstracing-type/`, `acos-jstracing-python/`, and `acos-jstracing-java/` to the `files` list.
 
 Comment:
 - Ensures the new package subtree is included when installing `acos-jstracing`.
@@ -294,7 +337,7 @@ Updated:
 
 Change highlights:
 - `fetch_quiz` lookup now checks the new content-type package path first.
-- content package directory resolution now checks `acos-jstracing/packages/acos-<packageId>` first.
+- content package directory resolution now checks `acos-jstracing/acos-<packageId>` first.
 - Legacy paths are kept as fallbacks for compatibility.
 
 Comment:
@@ -349,3 +392,18 @@ Comment:
 
 Comment:
 - If any item fails, first verify package installation paths in container (`acos-server/Dockerfile`) and auto-discovery logs on server startup.
+
+## 9. Existing ACOS Rollback Reference
+
+Quick rollback (container level):
+
+```bash
+cd deploy/ec2
+docker compose stop quizpet-tomcat quizpet-mysql
+git checkout <previous-tag-or-branch>
+docker compose up -d --build acos-server
+```
+
+Full rollback:
+- Restore MySQL volume or logical backup created before go-live.
+- Restore previous `.env` and reverse-proxy configuration.

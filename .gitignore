@@ -27,6 +27,7 @@ cookies.txt
 **/.settings/
 **/*.class
 **/*.jar
+!acos-jstracing/acos-jstracing-type/static/assets/tools.jar
 **/*.war
 **/*.ear
 

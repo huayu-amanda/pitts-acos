@@ -57,9 +57,9 @@ services:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      JSTRACING_TOOLS_JAR_PATH: ${JSTRACING_TOOLS_JAR_PATH:-/usr/src/app/deploy-assets/tools.jar}
+      JSTRACING_TOOLS_JAR_PATH: ${JSTRACING_TOOLS_JAR_PATH:-/usr/src/app/acos-jstracing/acos-jstracing-type/static/assets/tools.jar}
       CHEERPJ_RUNTIME_BASE_URL: ${CHEERPJ_RUNTIME_BASE_URL:-https://cjrtnc.leaningtech.com/4.3/}
-      CHEERPJ_SELF_HOST_DIR: ${CHEERPJ_SELF_HOST_DIR:-/usr/src/app/deploy-assets/cheerpj/4.3}
+      CHEERPJ_SELF_HOST_DIR: ${CHEERPJ_SELF_HOST_DIR:-}
       LTI_CONSUMER_KEY: ${LTI_CONSUMER_KEY:-acos}
       LTI_CONSUMER_SECRET: ${LTI_CONSUMER_SECRET:-acos}
       # Runtime-selectable QuizPet endpoint and credentials.

@@ -10,5 +10,6 @@ By default, JSTracing loads CheerpJ from the official versioned CDN:
 To use self-hosted assets:
 
 1. Place the licensed CheerpJ 4.3 runtime files in this directory, including `loader.js`.
-2. Set `CHEERPJ_RUNTIME_BASE_URL=/static/cheerpj/4.3/` for the `acos-server` container.
-3. Keep `CHEERPJ_SELF_HOST_DIR=/usr/src/app/deploy-assets/cheerpj/4.3` unless the Docker asset location changes.
+2. Set `CHEERPJ_RUNTIME_BASE_URL=/static/jstracing/assets/cheerpj/4.3/` for the `acos-server` container.
+3. Set `CHEERPJ_DISABLE_SELF_HOST=false` to enable self-host fallback (default is `true`, which keeps remote-first mode).
+4. Keep `CHEERPJ_SELF_HOST_DIR=/usr/src/app/acos-jstracing/acos-jstracing-type/static/assets/cheerpj/4.3` unless the Docker asset location changes.

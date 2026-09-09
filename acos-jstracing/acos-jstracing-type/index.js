@@ -27,9 +27,17 @@ exports.register = function registerJSTracingType(handlers, app, config) {
     console.warn("[acos-jstracing-type] WARN: JSTRACING_TOOLS_JAR_PATH is not configured; Java compilation is unavailable.");
   }
 
+  // Prefer remote CheerpJ runtime by default.
+  // Set CHEERPJ_DISABLE_SELF_HOST=false to enable local self-host fallback explicitly.
+  const disableSelfHostRaw = String(process.env.CHEERPJ_DISABLE_SELF_HOST || "true").trim().toLowerCase();
+  const selfHostDisabled = disableSelfHostRaw === "1" ||
+    disableSelfHostRaw === "true" ||
+    disableSelfHostRaw === "yes" ||
+    disableSelfHostRaw === "on";
+
   const cheerpjSelfHostDir = process.env.CHEERPJ_SELF_HOST_DIR ||
     (config && config.cheerpjSelfHostDir);
-  if (app && typeof app.get === "function" && cheerpjSelfHostDir && fs.existsSync(cheerpjSelfHostDir)) {
+  if (!selfHostDisabled && app && typeof app.get === "function" && cheerpjSelfHostDir && fs.existsSync(cheerpjSelfHostDir)) {
     const selfHostRoot = path.resolve(cheerpjSelfHostDir);
     app.get("/static/cheerpj/4.3/*", function(req, res, next) {
       const requestedPath = path.resolve(selfHostRoot, req.params[0] || "");
@@ -44,6 +52,8 @@ exports.register = function registerJSTracingType(handlers, app, config) {
       });
     });
     console.log("[acos-jstracing-type] INFO: self-hosted CheerpJ fallback directory is", selfHostRoot);
+  } else if (!selfHostDisabled && cheerpjSelfHostDir) {
+    console.warn("[acos-jstracing-type] WARN: CHEERPJ_SELF_HOST_DIR not found, keep using remote runtime:", cheerpjSelfHostDir);
   }
 
   JSTracing.handlers = handlers;
