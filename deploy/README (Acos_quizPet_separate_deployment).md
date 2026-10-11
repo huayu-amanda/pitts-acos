@@ -68,7 +68,7 @@ QUIZPET_BASE_URL_LOCAL=http://host.docker.internal:18080/quizpet
 ```env
 CHEERPJ_RUNTIME_BASE_URL=https://cjrtnc.leaningtech.com/4.3/
 CHEERPJ_DISABLE_SELF_HOST=true
-# CHEERPJ_SELF_HOST_DIR=/usr/src/app/acos-jstracing/acos-jstracing-type/static/assets/cheerpj/4.3
+# CHEERPJ_SELF_HOST_DIR=/usr/src/app/acos-jstracing-type/static/assets/cheerpj/4.3
 ```
 
 Notes:

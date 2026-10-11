@@ -2,6 +2,12 @@
   "name": "acos-jstracing-java",
   "version": "1.0.0",
   "main": "index.js",
+  "files": [
+    "index.js",
+    "manifest.json",
+    "exercises/",
+    "package.json"
+  ],
   "author": "Hua Yu",
   "license": "MIT",
   "packageType": "content",

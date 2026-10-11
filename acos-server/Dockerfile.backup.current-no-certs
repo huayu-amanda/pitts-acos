@@ -16,10 +16,13 @@ COPY ./acos-server ${APP_DIR}
 # do not duplicate it.
 RUN npm install
 
-#4 [Required] Install the jstracing custom content type added in this integration
-# For pitts-quizpet-acos integration
-COPY ./acos-jstracing ${APP_DIR}/acos-jstracing
-RUN npm install ./acos-jstracing
+#4 [Required] Install split jstracing packages
+COPY ./acos-jstracing-type ${APP_DIR}/acos-jstracing-type
+COPY ./acos-jstracing-python ${APP_DIR}/acos-jstracing-python
+COPY ./acos-jstracing-java ${APP_DIR}/acos-jstracing-java
+RUN npm install ./acos-jstracing-type
+RUN npm install ./acos-jstracing-python
+RUN npm install ./acos-jstracing-java
 
 #5 [Required] Install quizpet-generator as an ACOS tool package
 COPY ./acos-quizpet-generator-tool ${APP_DIR}/acos-quizpet-generator-tool

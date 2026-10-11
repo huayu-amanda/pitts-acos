@@ -13,28 +13,17 @@ var routeConfig = {};
 var tryFetchQuizData = null;
 var getLastFetchQuizDiagnostic = null;
 try {
-  var fetchQuizModuleLocal = require(path.join(__dirname, '..', '..', 'acos-jstracing', 'acos-jstracing-type', 'fetch-quiz'));
-  // tryFetchQuizCode = fetchQuizModuleLocal.tryFetchQuizCode;
-  tryFetchQuizData = fetchQuizModuleLocal.tryFetchQuizData;
-  getLastFetchQuizDiagnostic = fetchQuizModuleLocal.getLastFetchQuizDiagnostic;
+  var fetchQuizModule = require('acos-jstracing-type/fetch-quiz');
+  tryFetchQuizData = fetchQuizModule.tryFetchQuizData;
+  getLastFetchQuizDiagnostic = fetchQuizModule.getLastFetchQuizDiagnostic;
 } catch (e1) {
   try {
-    var fetchQuizModuleNodeModules = require(path.join(__dirname, '..', 'node_modules', 'acos-jstracing', 'acos-jstracing-type', 'fetch-quiz'));
-    // tryFetchQuizCode = fetchQuizModuleNodeModules.tryFetchQuizCode;
-    tryFetchQuizData = fetchQuizModuleNodeModules.tryFetchQuizData;
-    getLastFetchQuizDiagnostic = fetchQuizModuleNodeModules.getLastFetchQuizDiagnostic;
+    var fetchQuizModuleLocal = require(path.join(__dirname, '..', '..', '..', 'acos-jstracing-type', 'fetch-quiz'));
+    tryFetchQuizData = fetchQuizModuleLocal.tryFetchQuizData;
+    getLastFetchQuizDiagnostic = fetchQuizModuleLocal.getLastFetchQuizDiagnostic;
   } catch (e2) {
-    try {
-      // Backward-compatible fallback for older installs.
-      var fetchQuizModuleLegacy = require(path.join(__dirname, '..', 'node_modules', 'acos-jstracing', 'lib', 'jstracing', 'fetch_quiz'));
-      // tryFetchQuizCode = fetchQuizModuleLegacy.tryFetchQuizCode;
-      tryFetchQuizData = fetchQuizModuleLegacy.tryFetchQuizData;
-      getLastFetchQuizDiagnostic = fetchQuizModuleLegacy.getLastFetchQuizDiagnostic;
-    } catch (e3) {
-      // tryFetchQuizCode = null;
-      tryFetchQuizData = null;
-      getLastFetchQuizDiagnostic = null;
-    }
+    tryFetchQuizData = null;
+    getLastFetchQuizDiagnostic = null;
   }
 }
 
@@ -158,16 +147,20 @@ var resolveJSTracingPackageDir = function(packageId) {
   var pkg = String(packageId || 'jstracing-python').trim();
   var candidates = [];
   var configuredRoots = getConfiguredJSTracingRoots();
+  var workspaceRoot = path.resolve(__dirname, '..', '..', '..');
 
   for (var c = 0; c < configuredRoots.length; c++) {
     candidates.push(path.join(configuredRoots[c], 'acos-' + pkg));
     candidates.push(path.join(configuredRoots[c], pkg));
   }
 
-  candidates.push(path.join(__dirname, '..', '..', 'acos-jstracing', 'acos-' + pkg));
-  candidates.push(path.join(__dirname, '..', '..', 'acos-jstracing', pkg));
-  candidates.push(path.join(__dirname, '..', 'node_modules', 'acos-jstracing', 'acos-' + pkg));
-  candidates.push(path.join(__dirname, '..', 'node_modules', 'acos-jstracing', pkg));
+  // Source checkout layout and host installation layout.
+  candidates.push(path.join(workspaceRoot, 'acos-' + pkg));
+  candidates.push(path.join(workspaceRoot, pkg));
+  candidates.push(path.join(workspaceRoot, 'node_modules', 'acos-' + pkg));
+  candidates.push(path.join(workspaceRoot, 'node_modules', pkg));
+  candidates.push(path.join(process.cwd(), 'node_modules', 'acos-' + pkg));
+  candidates.push(path.join(process.cwd(), 'node_modules', pkg));
 
   for (var i = 0; i < candidates.length; i++) {
     var dir = candidates[i];

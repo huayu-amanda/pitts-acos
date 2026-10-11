@@ -336,13 +336,22 @@ async function tryFetchQuizData(quizId, baseUrl, options) {
       password: options.password ? 'options' : (password ? 'process.env' : null),
     };
 
-    // If env vars not set, try to read acos-jstracing/.env in package root
+    // If env vars are missing, probe common local env files.
     if (!username || !password) {
       try {
         const path = require('path');
-        const envPath = path.join(__dirname, '..', '..', '.env');
         const fs = require('fs');
-        if (fs.existsSync(envPath)) {
+        const envCandidates = [
+          path.join(process.cwd(), '.env'),
+          path.join(__dirname, '.env'),
+          path.join(__dirname, '..', '.env'),
+          path.join(__dirname, '..', '..', '.env')
+        ];
+
+        for (const envPath of envCandidates) {
+          if (!fs.existsSync(envPath)) {
+            continue;
+          }
           const env = readEnvFile(envPath);
           if (!username && env.QUIZPET_USERNAME) {
             username = env.QUIZPET_USERNAME;
@@ -351,6 +360,9 @@ async function tryFetchQuizData(quizId, baseUrl, options) {
           if (!password && env.QUIZPET_PASSWORD) {
             password = env.QUIZPET_PASSWORD;
             credsSource.password = envPath;
+          }
+          if (username && password) {
+            break;
           }
         }
       } catch (e) {

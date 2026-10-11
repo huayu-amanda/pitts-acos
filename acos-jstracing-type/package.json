@@ -1,0 +1,25 @@
+{
+  "name": "acos-jstracing-type",
+  "version": "1.0.0",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./fetch-quiz": "./fetch-quiz.js"
+  },
+  "files": [
+    "index.js",
+    "runtime.js",
+    "fetch-quiz.js",
+    "scripts/",
+    "static/",
+    "package.json"
+  ],
+  "scripts": {
+    "sync-static": "node scripts/sync-static.js",
+    "prepare": "node scripts/sync-static.js"
+  },
+  "author": "Hua Yu",
+  "license": "MIT",
+  "packageType": "content-type",
+  "namespace": "jstracing"
+}

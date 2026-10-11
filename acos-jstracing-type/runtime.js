@@ -77,7 +77,7 @@ const legacyDirectForwardGradeToQuizPet = (req, payload, protocolData) => {
 
 /**
  * JSTracing content type object
- * Registered to handlers.contentTypes['jstracing'] by acos-jstracing/index.js
+ * Registered to handlers.contentTypes['jstracing'] by acos-jstracing-type/index.js
  */
 const JSTracing = {
   namespace: "jstracing",        // ★ New
